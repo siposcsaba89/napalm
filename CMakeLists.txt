@@ -17,6 +17,7 @@ set(SRCS
     napalm/napalm.cpp
 )
 
+
 add_library(${PROJECT_NAME} ${SRCS} ${PUBLIC_HEADERS})
 add_library(::${PROJECT_NAME} ALIAS napalm)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -24,16 +25,28 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX _d)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 
+
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/${PROJECT_NAME}/${PROJECT_NAME}_export.h)
+
+find_package(OpenCL QUIET)
+if (OpenCL_FOUND)
+    message(STATUS "Building with OpenCL, ${OpenCL_LIBRARIES}")
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCL_LIBRARIES})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAS_OPENCL)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCL_INCLUDE_DIRS})
+endif(OpenCL_FOUND)
+
 
 target_include_directories(${PROJECT_NAME} 
     PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>
-        $<INSTALL_INTERFACE:include/napalm>
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
     
 )
+
+
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
