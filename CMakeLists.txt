@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(PROJECT_NAME napalm)
-project(${PROJECT_NAME})
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+project(napalm)
 
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -32,9 +36,7 @@ generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/
 find_package(OpenCL QUIET)
 if (OpenCL_FOUND)
     message(STATUS "Building with OpenCL, ${OpenCL_LIBRARIES}")
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCL_LIBRARIES})
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAS_OPENCL)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCL_INCLUDE_DIRS})
+    add_subdirectory(napalm_OpenCL)
 endif(OpenCL_FOUND)
 
 
@@ -46,7 +48,7 @@ target_include_directories(${PROJECT_NAME}
     
 )
 
-
+target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -79,6 +81,6 @@ if (BUILD_EXAMPLES)
     set_target_properties(napalm_simple PROPERTIES DEBUG_POSTFIX _d)
     set_target_properties(napalm_simple PROPERTIES FOLDER examples)
     #target_include_directories(napalm_sim PRIVATE ${OpenCV_INCLUDE_DIRS})
-    target_link_libraries(napalm_simple PRIVATE ::napalm )#${OpenCV_LIBRARIES}
+    target_link_libraries(napalm_simple PRIVATE ::napalm ::napalm_OpenCL)#${OpenCV_LIBRARIES}
     install(TARGETS napalm_simple DESTINATION bin)
 endif()
