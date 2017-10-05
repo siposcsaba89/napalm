@@ -64,12 +64,12 @@ namespace napalm
 
     struct Buffer
     {
-        virtual void write(const void * data, int32_t command_queue = 0) = 0;
-        virtual void write(const void * data, size_t offset, size_t size, int32_t command_queue = 0) = 0;
-        virtual void read(void * data, int32_t command_queue = 0) const = 0;
-        virtual void read(void * data, size_t offset, size_t size, int32_t command_queue = 0) const = 0;
-        virtual void * map(MapMode mode = MAP_MODE_READ, int32_t command_queue = 0) = 0;
-        virtual void * map(MapMode mode, size_t offset, size_t size, int32_t command_queue = 0) = 0;
+        virtual void write(const void * data, bool block_queue = true, int32_t command_queue = 0) = 0;
+        virtual void write(const void * data, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) = 0;
+        virtual void read(void * data, bool block_queue = true, int32_t command_queue = 0) const = 0;
+        virtual void read(void * data, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) const = 0;
+        virtual void * map(MapMode mode = MAP_MODE_READ, bool block_queue = true, int32_t command_queue = 0) = 0;
+        virtual void * map(MapMode mode, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
         virtual ~Buffer() {}
     public:
@@ -86,15 +86,15 @@ namespace napalm
 
     struct Img
     {
-        virtual void write(const void * data, int32_t command_queue = 0) = 0;
+        virtual void write(const void * data, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void write(const void * data, const ImgRegion & origin, 
-            const ImgRegion & region, int32_t command_queue = 0) = 0;
-        virtual void read(void * data, int32_t command_queue = 0) const = 0;
+            const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) = 0;
+        virtual void read(void * data, bool block_queue = true, int32_t command_queue = 0) const = 0;
         virtual void read(void * data, const ImgRegion & origin,
-            const ImgRegion & region, int32_t command_queue = 0) const = 0;
-        virtual void * map(MapMode mode = MAP_MODE_READ, int32_t command_queue = 0) = 0;
+            const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) const = 0;
+        virtual void * map(MapMode mode = MAP_MODE_READ, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void * map(MapMode mode, const ImgRegion & origin,
-            const ImgRegion & region, int32_t command_queue = 0) = 0;
+            const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
         virtual ~Img() {}
         ImgRegion img_size;
@@ -109,6 +109,7 @@ namespace napalm
         virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
             void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
         virtual const char * getContextKind() = 0;
+        virtual void finish(int32_t command_queue) = 0;
         virtual ~Context() {}
 
     protected:

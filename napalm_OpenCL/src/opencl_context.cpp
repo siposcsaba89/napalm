@@ -89,6 +89,13 @@ namespace napalm {
         {
             return "OpenCL";
         }
+        
+         void OpenCLContext::finish(int32_t command_queue)
+         {
+            cl_int err = clFinish(m_command_queues[command_queue]);
+            handleError(err, "ClCommandQueue finish");
+         }
+        
         OpenCLContext::~OpenCLContext()
         {
             for (auto & cq : m_command_queues)

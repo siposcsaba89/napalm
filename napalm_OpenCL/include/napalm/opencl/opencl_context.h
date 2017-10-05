@@ -17,8 +17,8 @@ namespace napalm
                 void * host_ptr = nullptr, int32_t * error = 0);
             virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
                 void * host_ptr = nullptr, int32_t * error = nullptr);
-
             virtual const char * getContextKind();
+            virtual void finish(int32_t command_queue);
             virtual ~OpenCLContext();
             cl_context getCLContext();
             cl_command_queue getCQ(int32_t id);

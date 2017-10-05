@@ -22,38 +22,12 @@ namespace napalm
             handleError(err, "OpenCL Create image!");
         }
 
-        void CLImg::write(const void * data, int32_t command_queue)
+        void CLImg::write(const void * data, bool block_queue, int32_t command_queue)
         {
-            write(data, ImgRegion(0, 0, 0), img_size, command_queue);
+            write(data, ImgRegion(0, 0, 0), img_size, block_queue, command_queue);
         }
 
-        void CLImg::write(const void * data, const ImgRegion & origin, const ImgRegion & region, int32_t command_queue)
-        {
-            size_t img_origin[] =
-            {
-                size_t(origin.x),
-                size_t(origin.y),
-                size_t(origin.z),
-            };
-            size_t img_region[] =
-            {
-                size_t(region.x),
-                size_t(region.y),
-                size_t(region.z),
-            };
-
-            //TODO blocking write parameter, maybe wait list shuld be also considered
-            cl_int err = clEnqueueWriteImage(m_ctx->getCQ(command_queue), m_buffer, true,
-                img_origin, img_region, 0, 0, data, 0, nullptr, nullptr);
-            handleError(err, "OpenCL img create");
-        }
-
-        void CLImg::read(void * data, int32_t command_queue) const
-        {
-            read(data, ImgRegion(0, 0, 0), img_size, command_queue);
-        }
-
-        void CLImg::read(void * data, const ImgRegion & origin, const ImgRegion & region, int32_t command_queue) const
+        void CLImg::write(const void * data, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue)
         {
             size_t img_origin[] =
             {
@@ -69,17 +43,43 @@ namespace napalm
             };
 
             //TODO blocking write parameter, maybe wait list shuld be also considered
-            cl_int err = clEnqueueReadImage(m_ctx->getCQ(command_queue), m_buffer, true,
+            cl_int err = clEnqueueWriteImage(m_ctx->getCQ(command_queue), m_buffer, block_queue,
                 img_origin, img_region, 0, 0, data, 0, nullptr, nullptr);
             handleError(err, "OpenCL img create");
         }
 
-        void * CLImg::map(MapMode mode, int32_t command_queue)
+        void CLImg::read(void * data, bool block_queue, int32_t command_queue) const
         {
-            return map(mode, ImgRegion(0, 0, 0), img_size, command_queue);
+            read(data, ImgRegion(0, 0, 0), img_size, block_queue, command_queue);
         }
 
-        void * CLImg::map(MapMode mode, const ImgRegion & origin, const ImgRegion & region, int32_t command_queue)
+        void CLImg::read(void * data, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue) const
+        {
+            size_t img_origin[] =
+            {
+                size_t(origin.x),
+                size_t(origin.y),
+                size_t(origin.z),
+            };
+            size_t img_region[] =
+            {
+                size_t(region.x),
+                size_t(region.y),
+                size_t(region.z),
+            };
+
+            //TODO blocking write parameter, maybe wait list shuld be also considered
+            cl_int err = clEnqueueReadImage(m_ctx->getCQ(command_queue), m_buffer, block_queue,
+                img_origin, img_region, 0, 0, data, 0, nullptr, nullptr);
+            handleError(err, "OpenCL img create");
+        }
+
+        void * CLImg::map(MapMode mode, bool block_queue, int32_t command_queue)
+        {
+            return map(mode, ImgRegion(0, 0, 0), img_size, block_queue, command_queue);
+        }
+
+        void * CLImg::map(MapMode mode, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue)
         {
             size_t img_origin[] =
             {
@@ -98,7 +98,7 @@ namespace napalm
             size_t image_slice_pitch = 0;
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = 0;
-            m_map_address = clEnqueueMapImage(m_ctx->getCQ(command_queue), m_buffer, true,
+            m_map_address = clEnqueueMapImage(m_ctx->getCQ(command_queue), m_buffer, block_queue,
                 getCLMapFlag(mode), img_origin ,img_region, &image_row_pitch, &image_slice_pitch,0, nullptr, nullptr, &err);
             handleError(err, "OpenCL img create");
             return m_map_address;

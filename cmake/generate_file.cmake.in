@@ -1,0 +1,162 @@
+# Create empty output file
+set(output @output@)
+set(files @files@)
+set(cu_files @cu_files@)
+set(cu_files_ptxs @cu_files_ptxs@)
+set(target @target@)
+
+set (program_template_h @program_template_h@)
+set (program_template_cpp @program_template_cpp@)
+
+set(CLE @OpenCL_ENABLED@)
+set(CUDAE @CUDA_ENABLED@)
+set(CUDA_RT_C @CUDA_RUNTIME_COMPILE@)
+
+if (CLE)
+    foreach(bin ${files})
+        # Get short filename
+        #string(REGEX MATCH "([^/]+)$" filename ${bin})
+        get_filename_component(filename ${bin} NAME)
+        get_filename_component(filename_we ${bin} NAME_WE)
+        get_filename_component(filename_dir ${bin} DIRECTORY)
+        
+        #message(FATAL_ERROR "${filename} ${filename_we} ${filename_dir}")
+        set(file_to_read ${bin})
+        # Replace filename spaces & extension separator for C compatibility
+        string(REGEX REPLACE "\\.| |-" "_" filename ${filename})
+        # Read hex data from file
+        file(READ ${file_to_read} filedata HEX)
+        # Convert hex data for C compatibility
+        string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
+        # Append data to output file
+        file(TIMESTAMP ${bin} ts "%Y-%m-%dT%H:%M:%SZ" UTC)
+        message(STATUS "OpenCL program ${filename} added")
+        set(PROGRAM_SOURCE "")
+        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cl_program_${filename_we} = {std::string(\"${filename}\"), { \"${ts}\", std::string({${filedata}})}}\;\n")
+        if (CUDAE)
+            list(LENGTH cu_files num_cu_files)
+            list(LENGTH cu_files_ptxs num_cu_files_ptxs)
+            if (CUDA_RT_C AND ${num_cu_files} GREATER 0)
+                set(possible_kernels ${cu_files})
+                list(FILTER possible_kernels INCLUDE REGEX ".*${filename_we}.cu")
+                list(LENGTH possible_kernels num_of_possible_kernels)
+                message(STATUS "Possible cuda kernels for ${filename} ${possible_kernels}")
+                if (${num_of_possible_kernels} GREATER 1)
+                    message(FATAL_ERROR "Multiple cuda file found for ${filename}")
+                elseif(${num_of_possible_kernels} EQUAL 1)
+                    list (GET possible_kernels 0 cu_file)
+                    list (REMOVE_ITEM cu_files ${cu_file})
+                    #string(REGEX MATCH "([^/]+)$" filename ${bin})
+                    get_filename_component(filename ${cu_file} NAME_WE)
+                    set(file_to_read ${cu_file})
+                    # Replace filename spaces & extension separator for C compatibility
+                    string(REGEX REPLACE "\\.| |-" "_" filename ${filename})
+                    # Read hex data from file
+                    file(READ ${file_to_read} filedata HEX)
+                    # Convert hex data for C compatibility
+                    string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
+                    # Append data to output file
+                    file(TIMESTAMP ${file_to_read} ts "%Y-%m-%dT%H:%M:%SZ" UTC)
+                    message(STATUS "CUDA program ${filename} added")
+                    string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cuda_program_${filename_we} = {std::string(\"${filename}_cu\"), { \"${ts}\", std::string({${filedata}})}};\n")
+                    #message(FATAL_ERROR "juhhe ${cuptx_file}")
+                else()
+                    string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cuda_program_${filename_we} = {std::string(\"\"), { \"\", std::string()}};\n")
+                    message(WARNING "Cannot find cuda program for ${filename}")
+                endif()
+                #message(FATAL_ERROR " ${num_cu_files_ptxs} ${cu_files_ptxs} ${possible_kernels}")
+            elseif(NOT CUDA_RT_C AND ${num_cu_files_ptxs} GREATER 0)
+                set(possible_kernels ${cu_files_ptxs})
+                list(FILTER possible_kernels INCLUDE REGEX ".*cuda_compile_ptx_.*generated_${filename_we}.cu.ptx")
+                list(LENGTH possible_kernels num_of_possible_kernels)
+                message(STATUS "juhhe ${possible_kernels} ${cu_filename_ptx_dir}/cuda_compile_ptx_.*generated_${filename_we}.cu.ptx")
+                if (${num_of_possible_kernels} GREATER 1)
+                    message(FATAL_ERROR "Multiple cuda file found for ${filename}")
+                elseif(${num_of_possible_kernels} EQUAL 1)
+                    list (GET possible_kernels 0 cuptx_file)
+                    list (REMOVE_ITEM cu_files_ptxs ${cuptx_file})
+                    #string(REGEX MATCH "([^/]+)$" filename ${bin})
+                    get_filename_component(filename ${cuptx_file} NAME_WE)
+                    string(REGEX REPLACE "cuda_compile_ptx_.*generated_" "" filename ${filename})
+                    #message(FATAL_ERROR "${filename} ${filename_we} ${filename_dir}")
+                    set(file_to_read ${cuptx_file})
+                    # Replace filename spaces & extension separator for C compatibility
+                    string(REGEX REPLACE "\\.| |-" "_" filename ${filename})
+                    # Read hex data from file
+                    file(READ ${file_to_read} filedata HEX)
+                    # Convert hex data for C compatibility
+                    string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
+                    # Append data to output file
+                    file(TIMESTAMP ${file_to_read} ts "%Y-%m-%dT%H:%M:%SZ" UTC)
+                    message(STATUS "CUDA program ${filename} added")
+                    string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cuda_program_${filename_we} = {std::string(\"${filename}_cu\"), { \"${ts}\", std::string({${filedata}})}};\n")
+                    #message(FATAL_ERROR "juhhe ${cuptx_file}")
+                else()
+                    string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cuda_program_${filename_we} = {std::string(\"\"), { \"\", std::string()}};\n")
+                    message(WARNING "Cannot find cuda program for ${filename}")
+                endif()
+                #message(FATAL_ERROR " ${num_cu_files_ptxs} ${cu_files_ptxs} ${possible_kernels}")
+            endif()
+            
+        endif()
+        set(PROGRAM_NAME ${filename_we})
+        configure_file(${program_template_h} "gen/programs/${filename_we}.h" @ONLY)
+        configure_file(${program_template_cpp} "gen/programs/${filename_we}.cpp" @ONLY)
+        list(APPEND GENERATED_FILES gen/programs/${filename_we}.h gen/programs/${filename_we}.cpp)        
+    endforeach()
+endif()
+message(STATUS "${cu_files}${cu_files_ptxs}")
+if(CUDAE AND  CUDA_RT_C)
+    foreach(bin ${cu_files})
+        set(PROGRAM_SOURCE "")
+        # Get short filename
+        get_filename_component(filename ${bin} NAME)
+        get_filename_component(filename_we ${bin} NAME_WE)
+        set(file_to_read ${bin})
+        # Replace filename spaces & extension separator for C compatibility
+        string(REGEX REPLACE "\\.| |-" "_" filename ${filename})
+        # Read hex data from file
+        file(READ ${file_to_read} filedata HEX)
+        # Convert hex data for C compatibility
+        string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
+        # Append data to output file
+        file(TIMESTAMP ${bin} ts "%Y-%m-%dT%H:%M:%SZ" UTC)
+        message(STATUS "CUDA program ${filename} added")
+        
+        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cuda_program_${filename_we} = {std::string(\"${filename_we}_cu\"), { \"${ts}\", std::string({${filedata}})}}\;\n")
+        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cl_program_${filename_we} = {std::string(\"\"), { \"\", std::string()}};\n")
+        
+        set(PROGRAM_NAME ${filename_we})
+        configure_file(${program_template_h} "gen/programs/${filename_we}.h" @ONLY)
+        configure_file(${program_template_cpp} "gen/programs/${filename_we}.cpp" @ONLY)
+        list(APPEND GENERATED_FILES gen/programs/${filename_we}.h gen/programs/${filename_we}.cpp)
+    endforeach()
+elseif(CUDAE AND NOT CUDA_RT_C)
+    foreach(bin ${cu_files_ptxs})
+        set(PROGRAM_SOURCE "")
+        # Get short filename
+        get_filename_component(filename ${bin} NAME)
+        string(REGEX REPLACE "cuda_compile_ptx_.*generated_" "" filename ${filename})
+        get_filename_component(filename_we ${filename} NAME_WE)
+        #message(FATAL_ERROR ${filename})
+        set(file_to_read ${bin})
+        # Replace filename spaces & extension separator for C compatibility
+        string(REGEX REPLACE "\\.| |-" "_" filename ${filename})
+        # Read hex data from file
+        file(READ ${file_to_read} filedata HEX)
+        # Convert hex data for C compatibility
+        string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," filedata ${filedata})
+        # Append data to output file
+        file(TIMESTAMP ${bin} ts "%Y-%m-%dT%H:%M:%SZ" UTC)
+        message(STATUS "CUDA program ${filename} added")
+        
+        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cuda_program_${filename_we} = {std::string(\"${filename_we}_cu\"), { \"${ts}\", std::string({${filedata}})}}\;\n")
+        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "std::pair<std::string, std::vector<std::string> > cl_program_${filename_we} = {std::string(\"\"), { \"\", std::string()}};\n")
+        
+        set(PROGRAM_NAME ${filename_we})
+        configure_file(${program_template_h} "gen/programs/${filename_we}.h" @ONLY)
+        configure_file(${program_template_cpp} "gen/programs/${filename_we}.cpp" @ONLY)
+        list(APPEND GENERATED_FILES gen/programs/${filename_we}.h gen/programs/${filename_we}.cpp)
+    endforeach()
+endif()
+

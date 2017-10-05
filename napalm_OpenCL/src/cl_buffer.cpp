@@ -18,42 +18,42 @@ namespace napalm
                 *err = int32_t(err_);
         }
 
-        void CLBuffer::write(const void * data, int32_t command_queue)
+        void CLBuffer::write(const void * data, bool block_queue, int32_t command_queue)
         {
-            write(data, 0, buff_size, command_queue);
+            write(data, 0, buff_size, block_queue, command_queue);
         }
 
-        void CLBuffer::write(const void * data, size_t offset, size_t size, int32_t command_queue)
+        void CLBuffer::write(const void * data, size_t offset, size_t size, bool block_queue, int32_t command_queue)
         {
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = 0;
-            err = clEnqueueWriteBuffer(m_ctx->getCQ(command_queue), m_buffer, true, offset, size, data, 0, nullptr, nullptr);
+            err = clEnqueueWriteBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, offset, size, data, 0, nullptr, nullptr);
             handleError(err, "OpenCL Enequeue Write buffer!");
         }
 
-        void CLBuffer::read(void * data, int32_t command_queue) const
+        void CLBuffer::read(void * data, bool block_queue, int32_t command_queue) const
         {
-            read(data, 0, buff_size, command_queue);
+            read(data, 0, buff_size, block_queue, command_queue);
         }
 
-        void CLBuffer::read(void * data, size_t offset, size_t size, int32_t command_queue) const
+        void CLBuffer::read(void * data, size_t offset, size_t size, bool block_queue, int32_t command_queue) const
         {
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = 0;
-            err = clEnqueueReadBuffer(m_ctx->getCQ(command_queue), m_buffer, true, offset, size, data, 0, nullptr, nullptr);
+            err = clEnqueueReadBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, offset, size, data, 0, nullptr, nullptr);
             handleError(err, "OpenCL Enequeue Read buffer!");
         }
 
-        void * CLBuffer::map(MapMode mode, int32_t command_queue)
+        void * CLBuffer::map(MapMode mode, bool block_queue, int32_t command_queue)
         {
-            return map(mode, 0, buff_size, command_queue);
+            return map(mode, 0, buff_size, block_queue, command_queue);
         }
 
-        void * CLBuffer::map(MapMode mode, size_t offset, size_t size, int32_t command_queue)
+        void * CLBuffer::map(MapMode mode, size_t offset, size_t size, bool block_queue, int32_t command_queue)
         {
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = 0;
-            m_map_address = clEnqueueMapBuffer(m_ctx->getCQ(command_queue), m_buffer, true, 
+            m_map_address = clEnqueueMapBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, 
                 getCLMapFlag(mode), offset, size,0, nullptr, nullptr, &err);
             handleError(err, "OpenCL Enequeue Map buffer!");
             return m_map_address;
