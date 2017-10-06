@@ -1,6 +1,8 @@
 #pragma once
 #include <napalm/napalm_export.h>
 #include <inttypes.h>
+#include <iostream>
+#include <vector>
 
 namespace napalm
 {
@@ -100,6 +102,79 @@ namespace napalm
         ImgRegion img_size;
     };
 
+
+    struct Kernel
+    {
+        virtual void setArg(int32_t idx, void * val, size_t sizeof_arg) = 0;
+        virtual void setArgs(int32_t num_args, void ** argument, size_t * argument_sizes) = 0;
+        virtual void execute(int32_t command_queue, ImgRegion num_blocks, ImgRegion block_sizes) = 0;
+
+        void operator()(int32_t command_queue, ImgRegion num_blocks, ImgRegion block_sizes)
+        {
+            execute(command_queue, num_blocks, block_sizes);
+        }
+
+        template <typename ... Types>
+        void operator()(int32_t command_queue, ImgRegion num_blocks, ImgRegion block_sizes, Types&&... args)
+        {
+            size_t num_args = sizeof...(args);
+            void* arguments[sizeof...(args)];
+            size_t args_sizeof[sizeof...(args)];
+            fillArgVector(0, arguments, args_sizeof, args...);
+            setArgs(int32_t(num_args), arguments, args_sizeof);
+            execute(command_queue, num_blocks, block_sizes);
+        }
+    private:
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof)
+        {
+            std::cout << "Uress" << std::endl;
+        }
+
+        template <typename T, typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, T && arg, Types&&... Fargs)
+        {
+            std::cout << arg << std::endl;
+            //setArg(arg_idx, &arg, sizeof(arg));
+            arg_address[arg_idx] = &arg;
+            arg_sizeof[arg_idx] = sizeof(arg);
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+        template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Buffer & arg, Types&&... Fargs)
+        {
+            std::cout << sizeof(arg) << std::endl;
+            //setArg(arg_idx, &arg, sizeof(arg));
+            arg_address[arg_idx] = &arg;
+            arg_sizeof[arg_idx] = sizeof(arg);
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+        template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Img & arg, Types&&... Fargs)
+        {
+            std::cout << sizeof(arg) << std::endl;
+            //setArg(arg_idx, &arg, sizeof(arg));
+            arg_address[arg_idx] = &arg;
+            arg_sizeof[arg_idx] = sizeof(arg);
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+        template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Img & arg, Types&&... Fargs)
+        {
+            std::cout << sizeof(arg) << std::endl;
+            //setArg(arg_idx, &arg, sizeof(arg));
+            arg_address[arg_idx] = &arg;
+            arg_sizeof[arg_idx] = sizeof(arg);
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+    };
+
+    struct Program
+    {
+        virtual Kernel * getKernel(const char *  kernel_name) = 0;
+    };
 
     class Context
     {

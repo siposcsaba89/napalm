@@ -44,6 +44,17 @@ int main()
     }
 
 
+    struct ActKernel : public napalm::Kernel
+    {
+        virtual void setArg(int32_t idx, void * val, size_t sizeof_arg) {}
+        virtual void setArgs(int32_t num_args, void ** argument, size_t * argument_sizes) {}
+        virtual void execute(int32_t command_queue, napalm::ImgRegion num_blocks, napalm::ImgRegion block_sizes) { std::cout << "execute" << std::endl; }
+    };
+
+    ActKernel()(0, napalm::ImgRegion(), napalm::ImgRegion());
+    ActKernel()(0, napalm::ImgRegion(), napalm::ImgRegion(), 1,2, *d_buff,3,4,323423, *d_img3d, 434,34, 5,6);
+
+
     delete d_buff;
     delete d_img3d;
     delete d_img;
