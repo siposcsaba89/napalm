@@ -4,7 +4,7 @@
 
 int main()
 {
-    napalm::Context * cl_ctx = napalm::createContext("OpenCL", 2, 0, 5);
+    napalm::Context * cl_ctx = napalm::createContext("OpenCL", 1, 0, 5);
 
     //test buffer read write
     napalm::Buffer * d_buff = cl_ctx->createBuffer(256);

@@ -67,6 +67,11 @@ namespace napalm
             handleError(err, "OpenCL Unmap buffer!");
         }
 
+		ArgumentPropereties CLBuffer::getARgumentPropereties()
+		{
+			return ArgumentPropereties(m_buffer, sizeof(m_buffer));
+		}
+
         CLBuffer::~CLBuffer()
         {
         }
