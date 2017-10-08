@@ -8,6 +8,7 @@ set(PUBLIC_HDRS
     include/napalm/opencl/opencl_context.h
     include/napalm/opencl/cl_buffer.h
     include/napalm/opencl/cl_img.h
+    include/napalm/opencl/cl_program.h
     include/napalm/opencl/create.h
 )
 

@@ -1,6 +1,7 @@
 #include "../include/napalm/opencl/opencl_context.h"
 #include "../include/napalm/opencl/cl_buffer.h"
 #include "../include/napalm/opencl/cl_img.h"
+#include "../include/napalm/opencl/cl_program.h"
 #include "cl_utils.h"
 #include <memory>
 #include <assert.h>
@@ -85,10 +86,10 @@ namespace napalm {
             return new CLImg(this, format, size, mem_flag, host_ptr, error);
         }
 
-		Program * OpenCLContext::createProgram(const ProgramData & data)
-		{
-			return nullptr;
-		}
+        Program * OpenCLContext::createProgram(const ProgramData & data)
+        {
+            return new CLProgram(this, data);
+        }
 
         const char * OpenCLContext::getContextKind()
         {

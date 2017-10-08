@@ -63,12 +63,12 @@ namespace napalm
             data_type(img_data_type), img_channel_format(img_format){}
     };
 
-	struct ArgumentPropereties
-	{
-		ArgumentPropereties(void * ptr = nullptr, size_t argsize = 0) : arg_ptr(ptr), sizeof_arg(argsize) {}
-		void * arg_ptr;
-		size_t sizeof_arg;
-	};
+    struct ArgumentPropereties
+    {
+        ArgumentPropereties(void * ptr = nullptr, size_t argsize = 0) : arg_ptr(ptr), sizeof_arg(argsize) {}
+        void * arg_ptr;
+        size_t sizeof_arg;
+    };
 
     struct Buffer
     {
@@ -79,7 +79,7 @@ namespace napalm
         virtual void * map(MapMode mode = MAP_MODE_READ, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void * map(MapMode mode, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
-		virtual ArgumentPropereties getARgumentPropereties() = 0;
+        virtual ArgumentPropereties getARgumentPropereties() = 0;
         virtual ~Buffer() {}
     public:
         size_t buff_size;
@@ -105,10 +105,10 @@ namespace napalm
         virtual void * map(MapMode mode, const ImgRegion & origin,
             const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
-		virtual ArgumentPropereties getARgumentPropereties() = 0;
-		virtual ArgumentPropereties getARgumentProperetiesWritable() = 0;
+        virtual ArgumentPropereties getARgumentPropereties() = 0;
+        virtual ArgumentPropereties getARgumentProperetiesWritable() = 0;
         virtual ~Img() {}
-	public:
+    public:
         ImgRegion img_size;
     };
 
@@ -151,7 +151,7 @@ namespace napalm
         template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Buffer & arg, Types&&... Fargs)
         {
-			auto prop = arg.getARgumentPropereties();
+            auto prop = arg.getARgumentPropereties();
             arg_address[arg_idx] = prop.arg_ptr;
             arg_sizeof[arg_idx] = prop.sizeof_arg;
             fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
@@ -160,18 +160,18 @@ namespace napalm
         template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Img & arg, Types&&... Fargs)
         {
-			auto prop = arg.getARgumentPropereties();
-			arg_address[arg_idx] = prop.arg_ptr;
-			arg_sizeof[arg_idx] = prop.sizeof_arg; 
-			fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+            auto prop = arg.getARgumentPropereties();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg; 
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
         }
 
         template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Img & arg, Types&&... Fargs)
         {
-			auto prop = arg.getARgumentProperetiesWritable();
-			arg_address[arg_idx] = prop.arg_ptr;
-			arg_sizeof[arg_idx] = prop.sizeof_arg;
+            auto prop = arg.getARgumentProperetiesWritable();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg;
             fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
         }
     };
@@ -181,23 +181,22 @@ namespace napalm
         virtual Kernel * getKernel(const char *  kernel_name) = 0;
     };
 
-	struct ProgramData
-	{
-		enum DataType
-		{
-			DATA_TYPE_BINARY_DATA = 0,
-			DATA_TYPE_SOURCE_DATA = 1,
-			DATA_TYPE_BINARY_FILE_NAME = 2,
-			DATA_TYPE_SOURCE_FILE_NAME = 3
-		};
-		const char * data = nullptr;
-		size_t data_size = 0;
-		DataType data_type;
-		ProgramData() {}
-		ProgramData(DataType type, const char * data, size_t data_size) :
-			data_type(type), data(data), data_size(data_size) {}
-
-	};
+    struct ProgramData
+    {
+        enum DataType
+        {
+            DATA_TYPE_BINARY_DATA = 0,
+            DATA_TYPE_SOURCE_DATA = 1,
+            DATA_TYPE_BINARY_FILE_NAME = 2,
+            DATA_TYPE_SOURCE_FILE_NAME = 3
+        };
+        const char * data = nullptr;
+        size_t data_size = 0;
+        DataType data_type;
+        ProgramData() {}
+        ProgramData(DataType type, const char * data, size_t data_size) :
+            data_type(type), data(data), data_size(data_size) {}
+    };
 
     class Context
     {
@@ -206,7 +205,7 @@ namespace napalm
             void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
         virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
             void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
-		virtual Program * createProgram(const ProgramData & data) = 0;
+        virtual Program * createProgram(const ProgramData & data) = 0;
         virtual const char * getContextKind() = 0;
         virtual void finish(int32_t command_queue) = 0;
         virtual ~Context() {}
