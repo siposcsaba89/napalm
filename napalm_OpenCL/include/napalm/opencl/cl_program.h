@@ -1,5 +1,4 @@
 #pragma once
-
 #include <napalm/napalm.h>
 #include <napalm/opencl/opencl_context.h>
 #include <map>
@@ -25,6 +24,7 @@ namespace cl
         CLProgram(OpenCLContext * ctx, const ProgramData & data, const char * compiler_options);
         virtual Kernel & getKernel(const char *  kernel_name);
         virtual bool getStatus() const;
+        virtual ProgramBinary getBinary();
         virtual ~CLProgram();
     private:
         bool createProgramWithSourceData(const ProgramData & data);
@@ -36,6 +36,7 @@ namespace cl
         cl_program m_program;
         bool m_program_status = false;
         std::map<std::string, CLKernel*> m_kernels;
+        std::string m_program_binary;
     };
 }
 }

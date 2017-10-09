@@ -4,7 +4,20 @@
 
 int main()
 {
-    napalm::Context * cl_ctx = napalm::createContext("OpenCL", 1, 0, 5);
+
+    napalm::PlatformAndDeviceInfo platforms_and_devices = napalm::getPlatformAndDeviceInfo("OpenCL");
+    //Test copy
+    napalm::PlatformAndDeviceInfo other = platforms_and_devices;
+    for (int32_t i = 0; i < other.num_platforms; ++i)
+    {
+        std::cout << other.platforms[i] << std::endl;
+        for (int32_t j = 0; j < other.num_devices[i]; ++j)
+        {
+            std::cout << "\t" << other.device_names[i][j] << std::endl;
+        }
+    }
+
+    napalm::Context * cl_ctx = napalm::createContext("OpenCL", 2, 0, 5);
 
     //test buffer read write
     napalm::Buffer * d_buff = cl_ctx->createBuffer(256);
@@ -61,8 +74,11 @@ int main()
     d_buff_out->read(buff2.data());
     for (size_t i = 0; i < buff2.size(); ++i)
     {
-        assert(buff2[i] == multiplier * buff[i] && "Memory read write error!");
+        assert(buff2[i] == multiplier * buff[i] && "Kernel execution error");
     }
+
+    std::cout << prog->getBinary().data << std::endl;
+    std::cout << prog->getBinary().binary_size << std::endl;
     delete prog;
     delete d_buff;
     delete d_buff_out;

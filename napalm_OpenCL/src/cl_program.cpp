@@ -28,20 +28,31 @@ namespace napalm
                 break;
             }
             cl_device_id dev_id = m_ctx->getCLDevice();
-            cl_int err = clBuildProgram(m_program,
-                1,
-                &dev_id,
-                compiler_options,
-                nullptr,
-                nullptr
+            cl_int err = CL_SUCCESS;
+            if (m_program_status)
+            {
+                err = clBuildProgram(m_program,
+                    1,
+                    &dev_id,
+                    compiler_options,
+                    nullptr,
+                    nullptr
                 );
-            std::string m_build_log;
-            size_t log_size = 0;
-            clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
-            m_build_log.resize(log_size);
-            clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, log_size, &m_build_log[0], nullptr);
-            std::cout << m_build_log << std::endl;
+            }
+            if (err != CL_SUCCESS)
+                m_program_status = false;
 
+            if (err != CL_SUCCESS && (dt == napalm::ProgramData::DATA_TYPE_SOURCE_FILE_NAME || 
+                dt == napalm::ProgramData::DATA_TYPE_SOURCE_DATA))
+            {
+                std::string m_build_log;
+                size_t log_size = 0;
+                clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
+                m_build_log.resize(log_size);
+                clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, log_size, &m_build_log[0], nullptr);
+                std::cout << m_build_log << std::endl;
+                handleError(err, "Program build failed");
+            }
         }
         napalm::Kernel & napalm::cl::CLProgram::getKernel(const char * kernel_name)
         {
@@ -62,6 +73,19 @@ namespace napalm
         bool CLProgram::getStatus() const
         {
             return m_program_status;
+        }
+        ProgramBinary CLProgram::getBinary()
+        {
+            size_t num_binaries;
+            clGetProgramInfo(m_program, CL_PROGRAM_BINARY_SIZES, 0, nullptr, &num_binaries);
+            std::vector<size_t> num_binarie(num_binaries);
+            clGetProgramInfo(m_program, CL_PROGRAM_BINARY_SIZES, num_binaries, num_binarie.data(), nullptr);
+            assert((num_binarie.size() == 1 || num_binarie[1] == 0) && "More then one binaries!");
+
+            m_program_binary.resize(num_binarie[0]);
+            char * data = &m_program_binary[0];
+            clGetProgramInfo(m_program, CL_PROGRAM_BINARIES, num_binaries, &data, nullptr);
+            return ProgramBinary{data, m_program_binary.size()};
         }
         CLProgram::~CLProgram()
         {

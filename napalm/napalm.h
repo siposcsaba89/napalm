@@ -176,10 +176,17 @@ namespace napalm
         }
     };
 
+    struct ProgramBinary
+    {
+        const char * data;
+        size_t binary_size;
+    };
+
     struct Program
     {
         virtual Kernel & getKernel(const char *  kernel_name) = 0;
         virtual bool getStatus() const = 0;
+        virtual ProgramBinary getBinary() = 0;
         virtual ~Program() {}
     };
 
@@ -195,6 +202,7 @@ namespace napalm
         const char * data = nullptr;
         size_t data_size = 0;
         DataType data_type;
+        std::string timestamp = "";
         ProgramData() {}
         ProgramData(DataType type, const char * data, size_t data_size_ = 0) :
             data_type(type), data(data), data_size(data_size_) {
@@ -219,5 +227,73 @@ namespace napalm
         int32_t m_context_type;
     };
 
+    struct PlatformAndDeviceInfo
+    {
+        int32_t num_platforms = 0;
+        char ** platforms = nullptr;
+        int32_t * num_devices = nullptr;
+        char *** device_names = nullptr;
+
+        PlatformAndDeviceInfo() {}
+        PlatformAndDeviceInfo(const PlatformAndDeviceInfo & other) { *this = other; }
+        PlatformAndDeviceInfo & operator= (const PlatformAndDeviceInfo & other)
+        {
+            for (int i = 0; i < num_platforms; ++i)
+            {
+                for (int j = 0; j < num_devices[i]; ++j)
+                {
+                    delete[] device_names[i][j];
+                }
+                delete[] platforms[i];
+                delete[] device_names[i];
+            }
+            delete[] num_devices;
+            delete[] platforms;
+            delete[] device_names;
+            num_devices = nullptr;
+            platforms = nullptr;
+            device_names = nullptr;
+            num_platforms = other.num_platforms;
+            platforms = new char*[num_platforms];
+            device_names = new char**[num_platforms];
+            num_devices = new int32_t[num_platforms];
+            memcpy(num_devices, other.num_devices, num_platforms * sizeof(int32_t));
+            for (int i = 0; i < num_platforms; ++i)
+            {
+                device_names[i] = new char *[num_devices[i]];
+                size_t platform_name_l = strlen(other.platforms[i]) + 1;
+                platforms[i] = new char[platform_name_l];
+                strcpy_s(platforms[i], platform_name_l, other.platforms[i]);
+                for (int j = 0; j < num_devices[i]; ++j)
+                {
+                    size_t dev_name_size = strlen(other.device_names[i][j]) + 1;
+                    device_names[i][j] = new char[dev_name_size];
+                    strcpy_s(device_names[i][j], dev_name_size, other.device_names[i][j]);
+                }
+            }
+            return *this;
+        }
+        ~PlatformAndDeviceInfo()
+        {
+            for (int i = 0; i < num_platforms; ++i)
+            {
+                for (int j = 0; j < num_devices[i]; ++j)
+                {
+                    delete[] device_names[i][j];
+                }
+                delete[] platforms[i];
+                delete[] device_names[i];
+            }
+            delete[] num_devices;
+            delete[] platforms;
+            delete[] device_names;
+            num_devices = nullptr;
+            platforms = nullptr;
+            device_names = nullptr;
+            num_platforms = 0;
+        }
+    };
+
+    NAPALM_EXPORT PlatformAndDeviceInfo getPlatformAndDeviceInfo(const char * api_type);
     NAPALM_EXPORT Context * createContext(const char * kind, int32_t platform_id, int32_t device_id, int32_t stream_count);
 }
