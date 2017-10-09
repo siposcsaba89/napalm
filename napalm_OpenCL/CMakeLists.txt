@@ -17,6 +17,7 @@ set(SRCS
     src/create.cpp
     src/cl_buffer.cpp
     src/cl_img.cpp
+    src/cl_program.cpp
     src/cl_utils.h
     src/cl_utils.cpp
     

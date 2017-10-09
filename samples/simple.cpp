@@ -8,6 +8,7 @@ int main()
 
     //test buffer read write
     napalm::Buffer * d_buff = cl_ctx->createBuffer(256);
+    napalm::Buffer * d_buff_out = cl_ctx->createBuffer(256);
     std::vector<uint8_t> buff(256, 1);
     d_buff->write(buff.data());
     std::vector<uint8_t> buff2(256, 3);
@@ -43,19 +44,28 @@ int main()
         assert(img_buff2_3d[i] == img_buff3d[i] && "Memory read write error!");
     }
 
-
-    struct ActKernel : public napalm::Kernel
+    //test simple cl program
+    napalm::ProgramData test_prog =
     {
-        virtual void setArg(int32_t idx, void * val, size_t sizeof_arg) {}
-        virtual void setArgs(int32_t num_args, void ** argument, size_t * argument_sizes) {}
-        virtual void execute(int32_t command_queue, napalm::ImgRegion num_blocks, napalm::ImgRegion block_sizes) { std::cout << "execute" << std::endl; }
+        napalm::ProgramData::DATA_TYPE_SOURCE_DATA,
+        "kernel void test_kernel(global unsigned char * src, global unsigned char * dst, int multiplier)"
+        "{dst[get_global_id(0)] = src[get_global_id(0)] * multiplier;}",
+        0
     };
-
-    ActKernel()(0, napalm::ImgRegion(), napalm::ImgRegion());
-    ActKernel()(0, napalm::ImgRegion(), napalm::ImgRegion(), 1,2, *d_buff,3,4,323423, *d_img3d, 434,34, 5,6);
-
-
+    int multiplier = 3;
+    napalm::Program * prog = cl_ctx->createProgram(test_prog);
+    napalm::Kernel & test_kernel = prog->getKernel("test_kernel");
+    test_kernel(1, napalm::ImgRegion(16), napalm::ImgRegion(16),
+        *d_buff, *d_buff_out, multiplier);
+    cl_ctx->finish(1);
+    d_buff_out->read(buff2.data());
+    for (size_t i = 0; i < buff2.size(); ++i)
+    {
+        assert(buff2[i] == multiplier * buff[i] && "Memory read write error!");
+    }
+    delete prog;
     delete d_buff;
+    delete d_buff_out;
     delete d_img3d;
     delete d_img;
     delete cl_ctx;

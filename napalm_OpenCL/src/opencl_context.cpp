@@ -86,9 +86,9 @@ namespace napalm {
             return new CLImg(this, format, size, mem_flag, host_ptr, error);
         }
 
-        Program * OpenCLContext::createProgram(const ProgramData & data)
+        Program * OpenCLContext::createProgram(const ProgramData & data, const char * compiler_options)
         {
-            return new CLProgram(this, data);
+            return new CLProgram(this, data, compiler_options);
         }
 
         const char * OpenCLContext::getContextKind()
@@ -117,6 +117,10 @@ namespace napalm {
         {
             assert(id < int(m_command_queues.size()) && id >= 0 && "Wrong OpenCL command queue id");
             return m_command_queues[id];
+        }
+        cl_device_id OpenCLContext::getCLDevice()
+        {
+            return m_cl_device_id;
         }
     }
 }

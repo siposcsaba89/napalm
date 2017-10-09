@@ -112,7 +112,7 @@ namespace napalm
 
 		ArgumentPropereties CLImg::getARgumentPropereties()
 		{
-			return ArgumentPropereties(m_buffer, sizeof(m_buffer));
+			return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
 		}
 
 		ArgumentPropereties CLImg::getARgumentProperetiesWritable()

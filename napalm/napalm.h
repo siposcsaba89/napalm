@@ -2,7 +2,6 @@
 #include <napalm/napalm_export.h>
 #include <inttypes.h>
 #include <iostream>
-#include <vector>
 
 namespace napalm
 {
@@ -134,6 +133,7 @@ namespace napalm
             setArgs(int32_t(num_args), arguments, args_sizeof);
             execute(command_queue, num_blocks, block_sizes);
         }
+        virtual ~Kernel() {}
     private:
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof)
         {
@@ -178,7 +178,9 @@ namespace napalm
 
     struct Program
     {
-        virtual Kernel * getKernel(const char *  kernel_name) = 0;
+        virtual Kernel & getKernel(const char *  kernel_name) = 0;
+        virtual bool getStatus() const = 0;
+        virtual ~Program() {}
     };
 
     struct ProgramData
@@ -194,8 +196,11 @@ namespace napalm
         size_t data_size = 0;
         DataType data_type;
         ProgramData() {}
-        ProgramData(DataType type, const char * data, size_t data_size) :
-            data_type(type), data(data), data_size(data_size) {}
+        ProgramData(DataType type, const char * data, size_t data_size_ = 0) :
+            data_type(type), data(data), data_size(data_size_) {
+            if (data_size == 0)
+                data_size = strlen(data);
+        }
     };
 
     class Context
@@ -205,7 +210,7 @@ namespace napalm
             void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
         virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
             void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
-        virtual Program * createProgram(const ProgramData & data) = 0;
+        virtual Program * createProgram(const ProgramData & data, const char * compiler_options = nullptr) = 0;
         virtual const char * getContextKind() = 0;
         virtual void finish(int32_t command_queue) = 0;
         virtual ~Context() {}

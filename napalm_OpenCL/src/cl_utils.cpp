@@ -1,5 +1,8 @@
 #include "cl_utils.h"
 #include <assert.h>
+#include <string>
+#include <fstream>
+#include <streambuf>
 
 std::string napalm::cl::getPlatformInfo(const std::vector<cl_platform_id>& platform_ids, int platform_id, int info_name)
 {
@@ -185,4 +188,11 @@ void napalm::cl::getCLImageForamt(ImgFormat format, ImgRegion size, cl_image_for
     cl_img_d.image_slice_pitch = 0;
     cl_img_d.num_mip_levels = 0;
     cl_img_d.num_samples = 0;
+}
+
+std::string napalm::cl::loadFile(const char * fname, bool binary)
+{
+    std::ifstream t(fname, binary ? std::ios::binary : std::ios::in);
+    return std::string((std::istreambuf_iterator<char>(t)),
+        std::istreambuf_iterator<char>());
 }

@@ -25,5 +25,7 @@ namespace napalm
 
         void getCLImageForamt(ImgFormat format, ImgRegion size,
             cl_image_format &  cl_img_f, cl_image_desc & cl_img_d);
+
+        std::string loadFile(const char * fname, bool binary);
     }
 }

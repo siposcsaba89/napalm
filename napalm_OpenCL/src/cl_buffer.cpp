@@ -69,7 +69,7 @@ namespace napalm
 
 		ArgumentPropereties CLBuffer::getARgumentPropereties()
 		{
-			return ArgumentPropereties(m_buffer, sizeof(m_buffer));
+			return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
 		}
 
         CLBuffer::~CLBuffer()
