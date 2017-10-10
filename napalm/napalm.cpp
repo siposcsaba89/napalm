@@ -18,6 +18,15 @@ napalm::Context* napalm::createContext(const char * kind, int32_t platform_id, i
     return 0;
 }
 
+NAPALM_EXPORT void napalm::destroyContext(Context * ctx)
+{
+    if (ctx->getProgramStore())
+        delete ctx->getProgramStore();
+    ctx->setProgramStore(nullptr);
+    delete ctx;
+    ctx = nullptr;
+}
+
 //napalm::PlatformAndDeviceInfo::PlatformAndDeviceInfo()
 //{
 //}

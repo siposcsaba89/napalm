@@ -1,7 +1,7 @@
 #include <napalm/napalm.h>
 #include <vector>
 #include <cassert>
-
+#include "napalm/program_template.h"
 int main()
 {
 
@@ -79,11 +79,26 @@ int main()
 
     std::cout << prog->getBinary().data << std::endl;
     std::cout << prog->getBinary().binary_size << std::endl;
+
+    
+    napalm::ProgramStore * pr_store = napalm::ProgramStore::create(cl_ctx);
+    napalm::gen::ProgramTemplate f_temp(*pr_store);
+    multiplier = 6;
+    f_temp("test_kernel")(1, napalm::ImgRegion(16), napalm::ImgRegion(16),
+        *d_buff, *d_buff_out, multiplier);
+    cl_ctx->finish(1);
+    d_buff_out->read(buff2.data());
+    for (size_t i = 0; i < buff2.size(); ++i)
+    {
+        assert(buff2[i] == multiplier * buff[i] && "Kernel execution error");
+    }
+
+
     delete prog;
     delete d_buff;
     delete d_buff_out;
     delete d_img3d;
     delete d_img;
-    delete cl_ctx;
+    napalm::destroyContext(cl_ctx);
     return 0;
 }

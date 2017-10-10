@@ -15,12 +15,12 @@ set_property(GLOBAL PROPERTY USE_FOLDERS On)
 
 set(PUBLIC_HEADERS
     napalm/napalm.h
-    napalm/program_manager.h
+    napalm/program_store.h
 )
 
 set(SRCS
     napalm/napalm.cpp
-    napalm/program_manager.cpp
+    napalm/program_store.cpp
 )
 
 

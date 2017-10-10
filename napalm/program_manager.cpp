@@ -1,11 +1,11 @@
 #include "program_manager.h"
 #include <fstream>
 
-napalm::ProgramManager::ProgramManager(Context * dev_ctx)
+napalm::ProgramStore::ProgramStore(Context * dev_ctx)
 {
 }
 
-napalm::ProgramManager::~ProgramManager()
+napalm::ProgramStore::~ProgramStore()
 {
     for (auto & pr : m_program_map)
     {
@@ -13,7 +13,7 @@ napalm::ProgramManager::~ProgramManager()
     }
 }
 
-napalm::Program * napalm::ProgramManager::getProgram(const std::string & name)
+napalm::Program * napalm::ProgramStore::getProgram(const std::string & name)
 {
     Program * ret = nullptr;
     auto it = m_program_map.find(name);
@@ -26,7 +26,7 @@ napalm::Program * napalm::ProgramManager::getProgram(const std::string & name)
     return ret;
 }
 
-void napalm::ProgramManager::addProgram(const std::string & name, const ProgramData & data)
+void napalm::ProgramStore::addProgram(const std::string & name, const ProgramData & data)
 {
     auto it = m_program_map.find(name);
     const ProgramData * pr_data_to_build = &data;
@@ -88,7 +88,7 @@ void napalm::ProgramManager::addProgram(const std::string & name, const ProgramD
 
 }
 
-void napalm::ProgramManager::enableProgramCache(bool cache_enabled)
+void napalm::ProgramStore::enableProgramCache(bool cache_enabled)
 {
     m_program_cache_enabled = cache_enabled;
 }

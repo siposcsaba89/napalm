@@ -2,7 +2,7 @@
 #include <napalm/napalm_export.h>
 #include <inttypes.h>
 #include <iostream>
-
+#include "program_store.h"
 namespace napalm
 {
     enum MapMode
@@ -204,8 +204,8 @@ namespace napalm
         DataType data_type;
         std::string timestamp = "";
         ProgramData() {}
-        ProgramData(DataType type, const char * data, size_t data_size_ = 0) :
-            data_type(type), data(data), data_size(data_size_) {
+        ProgramData(DataType type, const char * data, size_t data_size_ = 0, const std::string & timestamp = "") :
+            data_type(type), data(data), data_size(data_size_), timestamp(timestamp) {
             if (data_size == 0)
                 data_size = strlen(data);
         }
@@ -219,12 +219,17 @@ namespace napalm
         virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
             void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
         virtual Program * createProgram(const ProgramData & data, const char * compiler_options = nullptr) = 0;
-        virtual const char * getContextKind() = 0;
+        virtual const char * getContextKind() const = 0;
         virtual void finish(int32_t command_queue) = 0;
-        virtual ~Context() {}
+        void setProgramStore(ProgramStore * store) { m_pr_store = store; }
+        ProgramStore * getProgramStore() { return m_pr_store; }
+
 
     protected:
-        int32_t m_context_type;
+        virtual ~Context() {}
+    private:
+        friend void destroyContext(Context * ctx);
+        ProgramStore * m_pr_store = nullptr;
     };
 
     struct PlatformAndDeviceInfo
@@ -296,4 +301,5 @@ namespace napalm
 
     NAPALM_EXPORT PlatformAndDeviceInfo getPlatformAndDeviceInfo(const char * api_type);
     NAPALM_EXPORT Context * createContext(const char * kind, int32_t platform_id, int32_t device_id, int32_t stream_count);
+    NAPALM_EXPORT void destroyContext(Context * ctx);
 }

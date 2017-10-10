@@ -11,7 +11,7 @@
 namespace napalm {
     namespace cl
     {
-        OpenCLContext::OpenCLContext(int32_t platform_id, int32_t device_id, int32_t stream_count)
+        OpenCLContext::OpenCLContext(int32_t platform_id, int32_t device_id, int32_t stream_count) : Context()
         {
             cl_uint num_platform;
             clGetPlatformIDs(0, NULL, &num_platform);
@@ -91,7 +91,7 @@ namespace napalm {
             return new CLProgram(this, data, compiler_options);
         }
 
-        const char * OpenCLContext::getContextKind()
+        const char * OpenCLContext::getContextKind() const
         {
             return "OpenCL";
         }

@@ -1,1 +1,4 @@
 #pragma once
+
+
+cv::Mat alma(height, width, CV_8UC4, image.data);
