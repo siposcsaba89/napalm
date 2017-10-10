@@ -1,0 +1,37 @@
+#include "napalm/gen/programs/@pn@.h"
+#include <cassert>
+
+namespace napalm
+{
+    namespace gen
+    {
+        @pn@::@pn@(ProgramStore & store):
+            m_store(&store)
+        {
+            std::map<std::string, std::pair<std::string, ProgramData>> program_data =
+            { 
+               @PROGRAM_SOURCE@
+            };
+
+            if (strcmp(m_store->getContext()->getContextKind(), "OpenCL") == 0)
+            {
+                auto it = program_data.find("OpenCL");
+                assert(it != program_data.end() && "Program not available for OpenCL Context!");
+                m_program = m_store->addProgram(it->second.first, it->second.second);
+            }
+        }
+        @pn@::~@pn@()
+        {
+        }
+        Kernel & @pn@::getKernel(const std::string & kernel_name)
+        {
+            assert(m_program != nullptr && "Invalid Program");
+            return m_program->getKernel(kernel_name.c_str());
+        }
+
+        Kernel & @pn@::operator()(const std::string & kernel_name)
+        {
+            return getKernel(kernel_name);
+        }
+    }
+}

@@ -1,4 +1,21 @@
 #pragma once
+#include <napalm/napalm.h>
+#include <map>
 
-
-cv::Mat alma(height, width, CV_8UC4, image.data);
+namespace napalm
+{
+    namespace gen
+    {
+        class @pn@
+        {
+        public:
+            @pn@(ProgramStore & store);
+            ~@pn@();
+            Kernel & getKernel(const std::string & kernel_name);
+            Kernel & operator()(const std::string & kernel_name);
+        private:
+            ProgramStore * m_store = nullptr;
+            Program * m_program = nullptr;
+        };
+    }
+}

@@ -1,7 +1,7 @@
 #include <napalm/napalm.h>
 #include <vector>
 #include <cassert>
-#include "napalm/program_template.h"
+#include "napalm/gen/programs/simple.h"
 int main()
 {
 
@@ -17,7 +17,7 @@ int main()
         }
     }
 
-    napalm::Context * cl_ctx = napalm::createContext("OpenCL", 2, 0, 5);
+    napalm::Context * cl_ctx = napalm::createContext("OpenCL", 0, 0, 5);
 
     //test buffer read write
     napalm::Buffer * d_buff = cl_ctx->createBuffer(256);
@@ -82,8 +82,8 @@ int main()
 
     
     napalm::ProgramStore * pr_store = napalm::ProgramStore::create(cl_ctx);
-    napalm::gen::ProgramTemplate f_temp(*pr_store);
-    multiplier = 6;
+    napalm::gen::simple f_temp(*pr_store);
+    multiplier = 16;
     f_temp("test_kernel")(1, napalm::ImgRegion(16), napalm::ImgRegion(16),
         *d_buff, *d_buff_out, multiplier);
     cl_ctx->finish(1);
@@ -92,7 +92,7 @@ int main()
     {
         assert(buff2[i] == multiplier * buff[i] && "Kernel execution error");
     }
-
+    
 
     delete prog;
     delete d_buff;

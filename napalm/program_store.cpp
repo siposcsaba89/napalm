@@ -78,12 +78,27 @@ namespace napalm {
                 }
             }
             Program * prog = m_dev_ctx->createProgram(*pr_data_to_build);
+            bool program_loaded_succesfully = false;
             if (prog != nullptr && prog->getStatus())
+            {
+                program_loaded_succesfully = true;
+            }
+            else if (prog != nullptr && prog->getStatus() == false && binary != nullptr)
+            {
+                delete prog;
+                prog = m_dev_ctx->createProgram(data);
+                if (prog->getStatus())
+                {
+                    program_loaded_succesfully = true;
+                    pr_data_to_build = &data;
+                }
+            }
+            if (program_loaded_succesfully)
             {
                 m_program_map[name] = prog;
                 ret = prog;
-                if (m_program_cache_enabled && (data.data_type == ProgramData::DATA_TYPE_SOURCE_DATA ||
-                    data.data_type == ProgramData::DATA_TYPE_SOURCE_FILE_NAME))
+                if (m_program_cache_enabled && (pr_data_to_build->data_type == ProgramData::DATA_TYPE_SOURCE_DATA ||
+                    pr_data_to_build->data_type == ProgramData::DATA_TYPE_SOURCE_FILE_NAME))
                 {
                     std::ofstream bints(name + ".bints");
                     bints << data.timestamp;
