@@ -193,6 +193,11 @@ void napalm::cl::getCLImageForamt(ImgFormat format, ImgRegion size, cl_image_for
 std::string napalm::cl::loadFile(const char * fname, bool binary)
 {
     std::ifstream t(fname, binary ? std::ios::binary : std::ios::in);
+    if (!t.is_open())
+    {
+        printf("OpenCL loadFile: Cannot open file %s \n", fname);
+        return "";
+    }
     return std::string((std::istreambuf_iterator<char>(t)),
         std::istreambuf_iterator<char>());
 }

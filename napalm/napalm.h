@@ -3,6 +3,9 @@
 #include <inttypes.h>
 #include <iostream>
 #include "program_store.h"
+
+//TODO Context manager, to create and manage context by name like : Context * creteContextIfNotExists("main_context");
+
 namespace napalm
 {
     enum MapMode

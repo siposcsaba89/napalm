@@ -27,10 +27,10 @@ namespace napalm
             default:
                 break;
             }
-            cl_device_id dev_id = m_ctx->getCLDevice();
             cl_int err = CL_SUCCESS;
             if (m_program_status)
             {
+                cl_device_id dev_id = m_ctx->getCLDevice();
                 err = clBuildProgram(m_program,
                     1,
                     &dev_id,
@@ -108,6 +108,8 @@ namespace napalm
         bool CLProgram::createProgramWithSourceFile(const ProgramData & data)
         {
             std::string file_data = loadFile(data.data, false);
+            if (file_data.empty())
+                return false;
             cl_int err = CL_SUCCESS;
             const char * file_data_ptr = file_data.c_str();
             size_t file_data_l = file_data.size();

@@ -1,6 +1,6 @@
 
 set(EMBED_FILE_TEMPLATE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "Directory containing template PROGRAM_FILES")
-
+# TODO extension map to decide which file belongs which API and Binary or Source type, like ".cl:OpenCL:SOURCE;.cu:CUDA:SOURCE;.ptx:CUDA:BINARY"
 function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
     set(PROGRAM_FILES)
     set(CU_PROGRAM_FILES)
@@ -45,9 +45,12 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
     endif()
     set (PROGRAM_RUNTIME_SOURCE_DIR "./")
     if (DEFINED ARGV5)
-        message(FATAL_ERROR "sdasdasd")
-        set (EMBED_PROGRAM_FILES ${ARGV5})
+        set (PROGRAM_RUNTIME_SOURCE_DIR ${ARGV5})
     endif()
+    message(STATUS "EMBED_PROGRAM_FILES: ${EMBED_PROGRAM_FILES}")
+    message(STATUS "PROGRAM_RUNTIME_SOURCE_DIR: ${PROGRAM_RUNTIME_SOURCE_DIR}")
+
+
     configure_file(${EMBED_FILE_TEMPLATE_DIR}/generate_file.cmake.in
         "${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake"
         @ONLY

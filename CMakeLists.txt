@@ -82,8 +82,15 @@ if (BUILD_EXAMPLES)
     add_executable(napalm_simple samples/simple.cpp)
 	include(cmake/CreatePrograms.cmake)
 	set (PROGRAMS samples/simple.cl samples/simple.cu)
+	set(EMBED_PROGRAM_FILES TRUE)
+	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE TRUE)
+    set(PROGRAM_RUNTIME_SOURCE_DIR "./")
 	create_programs("${PROGRAMS}"
-		output napalm_simple TRUE FALSE)
+		output napalm_simple 
+        COMPILE_IN_BUILD_TYPE_IF_POSSIBLE 
+        ${EMBED_PROGRAM_FILES}
+        ${PROGRAM_RUNTIME_SOURCE_DIR}
+        )
     set_target_properties(napalm_simple PROPERTIES DEBUG_POSTFIX _d)
     set_target_properties(napalm_simple PROPERTIES FOLDER examples)
     #target_include_directories(napalm_sim PRIVATE ${OpenCV_INCLUDE_DIRS})
