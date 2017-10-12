@@ -5,7 +5,7 @@ namespace napalm {
     namespace cl {
         struct CLImg : public Img
         {
-            CLImg(OpenCLContext * ctx, ImgFormat format, ImgRegion size, 
+            CLImg(const OpenCLContext * ctx, ImgFormat format, ImgRegion size, 
                 MemFlag mem_flag, void * host_ptr, int32_t * error);
             virtual void write(const void * data, bool block_queue, int32_t command_queue);
             virtual void write(const void * data, const ImgRegion & origin,
@@ -22,7 +22,7 @@ namespace napalm {
             virtual ~CLImg();
         private:
             cl_mem m_buffer;
-            OpenCLContext * m_ctx;
+            const OpenCLContext * m_ctx;
             void * m_map_address = nullptr;
         };
     }

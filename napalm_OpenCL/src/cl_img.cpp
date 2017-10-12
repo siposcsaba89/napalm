@@ -7,7 +7,7 @@ namespace napalm
 {
     namespace cl
     {
-        CLImg::CLImg(OpenCLContext * ctx, ImgFormat format, ImgRegion size, 
+        CLImg::CLImg(const OpenCLContext * ctx, ImgFormat format, ImgRegion size, 
             MemFlag mem_flag, void * host_ptr, int32_t * error): m_ctx(ctx)
         {
             img_size = size;

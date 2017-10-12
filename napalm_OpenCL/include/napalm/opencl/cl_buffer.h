@@ -5,7 +5,7 @@ namespace napalm {
     namespace cl {
         struct CLBuffer : public Buffer
         {
-            CLBuffer(OpenCLContext * ctx, size_t size, MemFlag flag, void * host_ptr, int32_t * err);
+            CLBuffer(const OpenCLContext * ctx, size_t size, MemFlag flag, void * host_ptr, int32_t * err);
             virtual void write(const void * data, bool block_queue, int32_t command_queue);
             virtual void write(const void * data, size_t offet, size_t size, bool block_queue, int32_t command_queue);
             virtual void read(void * data, bool block_queue, int32_t command_queue) const;
@@ -17,7 +17,7 @@ namespace napalm {
             virtual ~CLBuffer();
         private:
             cl_mem m_buffer;
-            OpenCLContext * m_ctx;
+            const OpenCLContext * m_ctx;
             void * m_map_address = nullptr;
         };
     }

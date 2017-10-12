@@ -82,9 +82,9 @@ if (BUILD_EXAMPLES)
     add_executable(napalm_simple samples/simple.cpp)
 	include(cmake/CreatePrograms.cmake)
 	set (PROGRAMS samples/simple.cl samples/simple.cu)
-	set(EMBED_PROGRAM_FILES TRUE)
+	set(EMBED_PROGRAM_FILES FALSE)
 	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE TRUE)
-    set(PROGRAM_RUNTIME_SOURCE_DIR "./")
+    set(PROGRAM_RUNTIME_SOURCE_DIR "./alma/korte/")
 	create_programs("${PROGRAMS}"
 		output napalm_simple 
         COMPILE_IN_BUILD_TYPE_IF_POSSIBLE 

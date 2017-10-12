@@ -4,8 +4,6 @@
 #include <iostream>
 #include "program_store.h"
 
-//TODO Context manager, to create and manage context by name like : Context * creteContextIfNotExists("main_context");
-
 namespace napalm
 {
     enum MapMode
@@ -218,14 +216,14 @@ namespace napalm
     {
     public:
         virtual Buffer * createBuffer(size_t size, MemFlag mem_flag = MEM_FLAG_READ_WRITE, 
-            void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
+            void * host_ptr = nullptr, int32_t * error = nullptr) const = 0;
         virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
-            void * host_ptr = nullptr, int32_t * error = nullptr) = 0;
-        virtual Program * createProgram(const ProgramData & data, const char * compiler_options = nullptr) = 0;
+            void * host_ptr = nullptr, int32_t * error = nullptr) const = 0;
+        virtual Program * createProgram(const ProgramData & data, const char * compiler_options = nullptr) const = 0;
         virtual const char * getContextKind() const = 0;
-        virtual void finish(int32_t command_queue) = 0;
+        virtual void finish(int32_t command_queue) const = 0;
         void setProgramStore(ProgramStore * store) { m_pr_store = store; }
-        ProgramStore * getProgramStore() { return m_pr_store; }
+        ProgramStore * getProgramStore() const { return m_pr_store; }
 
 
     protected:

@@ -76,17 +76,17 @@ namespace napalm {
             }
         }
 
-        napalm::Buffer * OpenCLContext::createBuffer(size_t size, MemFlag mem_flag, void * host_ptr, int32_t * error)
+        napalm::Buffer * OpenCLContext::createBuffer(size_t size, MemFlag mem_flag, void * host_ptr, int32_t * error) const
         {
             return new CLBuffer(this, size, mem_flag, host_ptr, error);
         }
 
-        Img * OpenCLContext::createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag, void * host_ptr, int32_t * error)
+        Img * OpenCLContext::createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag, void * host_ptr, int32_t * error) const
         {
             return new CLImg(this, format, size, mem_flag, host_ptr, error);
         }
 
-        Program * OpenCLContext::createProgram(const ProgramData & data, const char * compiler_options)
+        Program * OpenCLContext::createProgram(const ProgramData & data, const char * compiler_options) const
         {
             return new CLProgram(this, data, compiler_options);
         }
@@ -96,7 +96,7 @@ namespace napalm {
             return "OpenCL";
         }
         
-         void OpenCLContext::finish(int32_t command_queue)
+         void OpenCLContext::finish(int32_t command_queue) const
          {
             cl_int err = clFinish(m_command_queues[command_queue]);
             handleError(err, "ClCommandQueue finish");
@@ -109,16 +109,16 @@ namespace napalm {
 
             clReleaseContext(m_cl_context);
         }
-        cl_context OpenCLContext::getCLContext()
+        cl_context OpenCLContext::getCLContext() const
         {
             return m_cl_context;
         }
-        cl_command_queue OpenCLContext::getCQ(int32_t id)
+        cl_command_queue OpenCLContext::getCQ(int32_t id) const
         {
             assert(id < int(m_command_queues.size()) && id >= 0 && "Wrong OpenCL command queue id");
             return m_command_queues[id];
         }
-        cl_device_id OpenCLContext::getCLDevice()
+        cl_device_id OpenCLContext::getCLDevice() const
         {
             return m_cl_device_id;
         }

@@ -6,7 +6,7 @@ namespace napalm
 {
     namespace cl
     {
-        CLProgram::CLProgram(OpenCLContext * ctx, const ProgramData & data, const char * compiler_options):
+        CLProgram::CLProgram(const OpenCLContext * ctx, const ProgramData & data, const char * compiler_options):
             m_ctx(ctx)
         {
             napalm::ProgramData::DataType dt = data.data_type;
@@ -153,7 +153,7 @@ namespace napalm
             handleError(err, "CL build Program With Binary Data!");
             return ret;
         }
-        CLKernel::CLKernel(OpenCLContext * ctx, cl_program program, const char * kernel_name) :
+        CLKernel::CLKernel(const OpenCLContext * ctx, cl_program program, const char * kernel_name) :
             m_ctx(ctx)
         {
             cl_int err = CL_SUCCESS;

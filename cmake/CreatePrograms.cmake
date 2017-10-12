@@ -47,6 +47,13 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
     if (DEFINED ARGV5)
         set (PROGRAM_RUNTIME_SOURCE_DIR ${ARGV5})
     endif()
+
+    set (PROGRAM_FILES_DESCRIPTORS ".cl:OpenCL:SOURCE" ".cu:CUDA:SOURCE" ".ptx:CUDA:BINARY")
+    if (DEFINED ARGV6)
+        set (PROGRAM_FILES_DESCRIPTORS ${ARGV6})
+    endif()
+    
+    
     message(STATUS "EMBED_PROGRAM_FILES: ${EMBED_PROGRAM_FILES}")
     message(STATUS "PROGRAM_RUNTIME_SOURCE_DIR: ${PROGRAM_RUNTIME_SOURCE_DIR}")
 

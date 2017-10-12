@@ -7,7 +7,7 @@ namespace napalm
 {
     namespace cl
     {
-        CLBuffer::CLBuffer(OpenCLContext * ctx, size_t size, MemFlag flag, void * host_ptr, int32_t * err) :
+        CLBuffer::CLBuffer(const OpenCLContext * ctx, size_t size, MemFlag flag, void * host_ptr, int32_t * err) :
             m_ctx(ctx)
         {
             buff_size = size;
