@@ -1,20 +1,69 @@
 #include "napalm.h"
 #include <string>
-#include <napalm/opencl/create.h>
+//#include <napalm/opencl/create.h>
+#include <Windows.h>
 
-
-NAPALM_EXPORT napalm::PlatformAndDeviceInfo napalm::getPlatformAndDeviceInfo(const char * api_type)
+NAPALM_EXPORT napalm::PlatformAndDeviceInfo * napalm::getPlatformAndDeviceInfo(const char * api_type)
 {
-    if (std::strcmp(api_type, "OpenCL") == 0)
-        return napalm::cl::getPlatformAndDeviceInfo();
-    return napalm::PlatformAndDeviceInfo();
+    typedef napalm::PlatformAndDeviceInfo*(__cdecl *get_info_func)();
+
+    //if (std::strcmp(api_type, "OpenCL") == 0)
+    {
+        std::string debug_ext = "";
+#if _DEBUG
+        debug_ext = "_d";
+#endif
+        std::string dll_name = (std::string("napalm_") + api_type + debug_ext + ".dll");
+
+        HINSTANCE hGetProcIDDLL = LoadLibrary(dll_name.c_str());
+
+        if (!hGetProcIDDLL) {
+            std::cout << "could not load the dynamic library " << dll_name << std::endl;
+            return nullptr;
+        }
+        // resolve function address here
+        get_info_func get_info = (get_info_func)GetProcAddress(hGetProcIDDLL, "getPlatformAndDeviceInfo");
+        if (!get_info) {
+            DWORD a =  GetLastError();
+
+            std::cout << "could not locate the function getPlatformAndDeviceInfo" << std::endl;
+            return nullptr;
+        }
+
+        return get_info();
+    }
+    return nullptr;
 }
 
-napalm::Context* napalm::createContext(const char * kind, int32_t platform_id, int32_t device_id, int32_t stream_count)
+napalm::Context* napalm::createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count)
 {
-    if (std::strcmp(kind, "OpenCL") == 0)
-        return napalm::cl::createContext(platform_id, device_id, stream_count);
+    typedef napalm::Context*(__stdcall *create_func)(int32_t platform_id, int32_t device_id, int32_t stream_count);
 
+    //if (std::strcmp(kind, "OpenCL") == 0)
+    {
+        std::string debug_ext = "";
+#if _DEBUG
+        debug_ext = "_d";
+#endif
+        std::string dll_name = (std::string("napalm_") + api_type + debug_ext + ".dll");
+
+        HINSTANCE hGetProcIDDLL = LoadLibrary(dll_name.c_str());
+        if (!hGetProcIDDLL) {
+            std::cout << "could not load the dynamic library " << std::string("napalm_") + api_type + ".dll" << std::endl;
+            return nullptr;
+        }
+
+        // resolve function address here
+        create_func createContext = (create_func)GetProcAddress(hGetProcIDDLL, "createContext");
+        if (!createContext) {
+            std::cout << "could not locate the function napalm::cl::createContext" << std::endl;
+            return nullptr;
+        }
+
+
+
+        return createContext(platform_id, device_id, stream_count);
+    }
     return 0;
 }
 

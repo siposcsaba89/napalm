@@ -50,7 +50,7 @@ target_include_directories(${PROJECT_NAME}
     
 )
 
-target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
+#target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -82,7 +82,7 @@ if (BUILD_EXAMPLES)
     add_executable(napalm_simple samples/simple.cpp)
 	include(cmake/CreatePrograms.cmake)
 	set (PROGRAMS samples/simple.cl samples/simple.cu)
-	set(EMBED_PROGRAM_FILES FALSE)
+	set(EMBED_PROGRAM_FILES TRUE)
 	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE TRUE)
     set(PROGRAM_RUNTIME_SOURCE_DIR "./alma/korte/")
 	create_programs("${PROGRAMS}"

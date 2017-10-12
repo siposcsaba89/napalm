@@ -5,9 +5,9 @@
 int main()
 {
 
-    napalm::PlatformAndDeviceInfo platforms_and_devices = napalm::getPlatformAndDeviceInfo("OpenCL");
+    napalm::PlatformAndDeviceInfo * platforms_and_devices = napalm::getPlatformAndDeviceInfo("OpenCL");
     //Test copy
-    napalm::PlatformAndDeviceInfo other = platforms_and_devices;
+    napalm::PlatformAndDeviceInfo other = *platforms_and_devices;
     for (int32_t i = 0; i < other.num_platforms; ++i)
     {
         std::cout << other.platforms[i] << std::endl;
@@ -16,7 +16,7 @@ int main()
             std::cout << "\t" << other.device_names[i][j] << std::endl;
         }
     }
-
+    delete platforms_and_devices;
     napalm::Context * cl_ctx = napalm::createContext("OpenCL", 0, 0, 5);
 
     //test buffer read write
