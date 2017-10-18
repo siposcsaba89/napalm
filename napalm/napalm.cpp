@@ -3,79 +3,143 @@
 //#include <napalm/opencl/create.h>
 #include <Windows.h>
 
-NAPALM_EXPORT napalm::PlatformAndDeviceInfo * napalm::getPlatformAndDeviceInfo(const char * api_type)
+namespace napalm
 {
-    typedef napalm::PlatformAndDeviceInfo*(__cdecl *get_info_func)();
 
-    //if (std::strcmp(api_type, "OpenCL") == 0)
+    class BackendLoader
     {
-        std::string debug_ext = "";
+        typedef PlatformAndDeviceInfo*(__cdecl *get_info_func)();
+        typedef Context*(__stdcall *create_context_func)(int32_t platform_id, int32_t device_id, int32_t stream_count);
+        BackendLoader(const BackendLoader &) = delete;
+        BackendLoader & operator = (const BackendLoader &) = delete;
+        BackendLoader(const std::string & backend)
+        {
+            std::string debug_ext = "";
 #if _DEBUG
-        debug_ext = "_d";
+            debug_ext = "_d";
 #endif
-        std::string dll_name = (std::string("napalm_") + api_type + debug_ext + ".dll");
+            std::string dll_name = (std::string("napalm_") + backend + debug_ext + ".dll");
+            hGetProcIDDLL = LoadLibrary(dll_name.c_str());
+            if (!hGetProcIDDLL) {
+                std::cout << "could not load the dynamic library " << dll_name << std::endl;
+                backend_loaded = false;
+                //throw std::runtime_error("could not load the dynamic library ");
+            }
+            // resolve function address here
+            get_info = (get_info_func)GetProcAddress(hGetProcIDDLL, "getPlatformAndDeviceInfo");
+            if (!get_info) {
+                DWORD a = GetLastError();
+                backend_loaded = false;
+                std::cout << "could not locate the function getPlatformAndDeviceInfo" << std::endl;
+                //throw std::runtime_error("could not locate the function getPlatformAndDeviceInfo");
+            }
 
-        HINSTANCE hGetProcIDDLL = LoadLibrary(dll_name.c_str());
+            // resolve function address here
+            create_context = (create_context_func)GetProcAddress(hGetProcIDDLL, "createContext");
+            if (!create_context) {
+                std::cout << "could not locate the function napalm::cl::createContext" << std::endl;
+                backend_loaded = false;
+            }
 
-        if (!hGetProcIDDLL) {
-            std::cout << "could not load the dynamic library " << dll_name << std::endl;
-            return nullptr;
         }
-        // resolve function address here
-        get_info_func get_info = (get_info_func)GetProcAddress(hGetProcIDDLL, "getPlatformAndDeviceInfo");
-        if (!get_info) {
-            DWORD a =  GetLastError();
 
-            std::cout << "could not locate the function getPlatformAndDeviceInfo" << std::endl;
-            return nullptr;
+        ~BackendLoader() { FreeLibrary(hGetProcIDDLL); }
+    public:
+        PlatformAndDeviceInfo* getPlatformAndDeviceInfo() const
+        {
+            return get_info();
         }
 
-        return get_info();
-    }
-    return nullptr;
-}
+        Context* createContext(int32_t platform_id, int32_t device_id, int32_t stream_count) const
+        {
+            return create_context(platform_id, device_id, stream_count);
+        }
 
-napalm::Context* napalm::createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count)
-{
-    typedef napalm::Context*(__stdcall *create_func)(int32_t platform_id, int32_t device_id, int32_t stream_count);
+        bool isLoaded() const { return backend_loaded; }
+    private:
+        friend class BackendManager;
+        friend bool isBackendAvailable(const char *);
+        get_info_func get_info = nullptr;
+        create_context_func create_context = nullptr;
+        bool backend_loaded = true;
+        HINSTANCE hGetProcIDDLL;
+    };
 
-    //if (std::strcmp(kind, "OpenCL") == 0)
+
+    class BackendManager
     {
-        std::string debug_ext = "";
-#if _DEBUG
-        debug_ext = "_d";
-#endif
-        std::string dll_name = (std::string("napalm_") + api_type + debug_ext + ".dll");
-
-        HINSTANCE hGetProcIDDLL = LoadLibrary(dll_name.c_str());
-        if (!hGetProcIDDLL) {
-            std::cout << "could not load the dynamic library " << std::string("napalm_") + api_type + ".dll" << std::endl;
-            return nullptr;
+    public:
+        static BackendManager & getManager()
+        {
+            static BackendManager s_instance;
+            return s_instance;
         }
-
-        // resolve function address here
-        create_func createContext = (create_func)GetProcAddress(hGetProcIDDLL, "createContext");
-        if (!createContext) {
-            std::cout << "could not locate the function napalm::cl::createContext" << std::endl;
-            return nullptr;
+    private:
+        BackendManager() {}
+        ~BackendManager() {
+            for (auto & be : m_backend_loaders)
+            {
+                delete be.second;
+                be.second = nullptr;
+            }
         }
+    public:
+        const BackendLoader * getLoader(const std::string & backend)
+        {
+            auto it = m_backend_loaders.find(backend);
+            if (it != m_backend_loaders.end())
+                return it->second;
+            else
+            {
+                BackendLoader * backend_loader = new BackendLoader(backend);
+                if (backend_loader->isLoaded())
+                    m_backend_loaders[backend] = backend_loader;
+                else
+                {
+                    delete backend_loader;
+                    backend_loader = nullptr;
+                }
+                return backend_loader;
+            }
+        }
+    private:
+        std::map<std::string, BackendLoader*> m_backend_loaders;
+    };
 
+    NAPALM_EXPORT bool isBackendAvailable(const char * api_type)
+    {
 
-
-        return createContext(platform_id, device_id, stream_count);
+        BackendLoader loader(api_type);
+        return loader.isLoaded();
     }
-    return 0;
-}
 
-NAPALM_EXPORT void napalm::destroyContext(Context * ctx)
-{
-    if (ctx->getProgramStore())
-        delete ctx->getProgramStore();
-    ctx->setProgramStore(nullptr);
-    delete ctx;
-    ctx = nullptr;
-}
+    NAPALM_EXPORT PlatformAndDeviceInfo * napalm::getPlatformAndDeviceInfo(const char * api_type)
+    {
+        auto backend = BackendManager::getManager().getLoader(api_type);
+        if (backend)
+            return backend->getPlatformAndDeviceInfo();
+        else
+            return nullptr;
+    }
 
+    Context* napalm::createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count)
+    {
+        auto backend = BackendManager::getManager().getLoader(api_type);
+        if (backend)
+            return backend->createContext(platform_id, device_id, stream_count);
+        else
+            return nullptr;
+    }
+
+    NAPALM_EXPORT void napalm::destroyContext(Context * ctx)
+    {
+        if (ctx->getProgramStore())
+            delete ctx->getProgramStore();
+        ctx->setProgramStore(nullptr);
+        delete ctx;
+        ctx = nullptr;
+    }
+}
 //napalm::PlatformAndDeviceInfo::PlatformAndDeviceInfo()
 //{
 //}

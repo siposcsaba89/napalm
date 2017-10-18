@@ -300,6 +300,7 @@ namespace napalm
         }
     };
 
+    NAPALM_EXPORT bool isBackendAvailable(const char * api_type);
     NAPALM_EXPORT PlatformAndDeviceInfo * getPlatformAndDeviceInfo(const char * api_type);
     NAPALM_EXPORT Context * createContext(const char * kind, int32_t platform_id, int32_t device_id, int32_t stream_count);
     NAPALM_EXPORT void destroyContext(Context * ctx);
