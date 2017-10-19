@@ -7,6 +7,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 project(napalm)
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
+
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
@@ -40,6 +44,13 @@ if (OpenCL_FOUND)
     message(STATUS "Building with OpenCL, ${OpenCL_LIBRARIES}")
     add_subdirectory(napalm_OpenCL)
 endif(OpenCL_FOUND)
+
+find_package(CUDA QUIET)
+if (CUDA_FOUND)
+    message(STATUS "Building with CUDA")
+    add_subdirectory(napalm_CUDA)
+endif(CUDA_FOUND)
+
 
 
 target_include_directories(${PROJECT_NAME} 
