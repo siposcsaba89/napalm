@@ -11,11 +11,15 @@ namespace napalm
             m_ctx(ctx)
         {
             buff_size = size;
-            cl_int err_;
-            m_buffer = clCreateBuffer(m_ctx->getCLContext(), getCLMemFlag(flag), buff_size, host_ptr, &err_);
-            handleError(err_, "Buffer creating!");
+            CUresult res;
+            if (flag == MEM_FLAG_ALLOC_HOST_PTR)
+                res = cuMemAllocManaged(&m_buffer, size, CU_MEM_ATTACH_GLOBAL);
+            else
+                res = cuMemAlloc(&m_buffer, size);
+            handleError(res, "CUDA Buffer creating!");
+            m_map_address = (void*)m_buffer;
             if (err != nullptr)
-                *err = int32_t(err_);
+                *err = int32_t(res);
         }
 
         void CUDABuffer::write(const void * data, bool block_queue, int32_t command_queue)
@@ -25,10 +29,12 @@ namespace napalm
 
         void CUDABuffer::write(const void * data, size_t offset, size_t size, bool block_queue, int32_t command_queue)
         {
-            //TODO blocking write parameter, maybe wait list shuld be also considered
-            cl_int err = 0;
-            err = clEnqueueWriteBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, offset, size, data, 0, nullptr, nullptr);
-            handleError(err, "OpenCL Enequeue Write buffer!");
+            CUresult res = CUDA_SUCCESS;
+            if (block_queue)
+                res = cuMemcpyHtoD(m_buffer + offset, data, size);
+            else
+                res = cuMemcpyHtoDAsync(m_buffer, data, size, m_ctx->getCQ(command_queue));
+            handleError(res, "CUDA Write buffer!");
         }
 
         void CUDABuffer::read(void * data, bool block_queue, int32_t command_queue) const
@@ -38,10 +44,12 @@ namespace napalm
 
         void CUDABuffer::read(void * data, size_t offset, size_t size, bool block_queue, int32_t command_queue) const
         {
-            //TODO blocking write parameter, maybe wait list shuld be also considered
-            cl_int err = 0;
-            err = clEnqueueReadBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, offset, size, data, 0, nullptr, nullptr);
-            handleError(err, "OpenCL Enequeue Read buffer!");
+            CUresult res = CUDA_SUCCESS;
+            if (block_queue)
+                res = cuMemcpyDtoH(data, m_buffer, size);
+            else
+                res = cuMemcpyDtoHAsync(data, m_buffer + offset, size, m_ctx->getCQ(command_queue));
+            handleError(res, "CUDA Write buffer!");
         }
 
         void * CUDABuffer::map(MapMode mode, bool block_queue, int32_t command_queue)
@@ -51,29 +59,22 @@ namespace napalm
 
         void * CUDABuffer::map(MapMode mode, size_t offset, size_t size, bool block_queue, int32_t command_queue)
         {
-            //TODO blocking write parameter, maybe wait list shuld be also considered
-            cl_int err = 0;
-            m_map_address = clEnqueueMapBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, 
-                getCLMapFlag(mode), offset, size,0, nullptr, nullptr, &err);
-            handleError(err, "OpenCL Enequeue Map buffer!");
             return m_map_address;
         }
 
         void CUDABuffer::unmap(int32_t command_queue)
         {
-            //TODO blocking write parameter, maybe wait list shuld be also considered
-            cl_int err = 0;
-            err = clEnqueueUnmapMemObject(m_ctx->getCQ(command_queue), m_buffer, m_map_address, 0, nullptr, nullptr);
-            handleError(err, "OpenCL Unmap buffer!");
         }
 
-		ArgumentPropereties CUDABuffer::getARgumentPropereties()
-		{
-			return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
-		}
+        ArgumentPropereties CUDABuffer::getARgumentPropereties()
+        {
+            return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
+        }
 
         CUDABuffer::~CUDABuffer()
         {
+            CUresult res = cuMemFree(m_buffer);
+            handleError(res, "cuda memory free");
         }
 
     }

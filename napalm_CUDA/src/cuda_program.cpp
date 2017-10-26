@@ -2,6 +2,20 @@
 #include "cuda_utils.h"
 #include <assert.h>
 
+#ifdef HAVE_NVRTC
+#include <nvrtc.h>
+#define NVRTC_SAFE_CALL(x) \
+    do { \
+        nvrtcResult result = x; \
+        if (result != NVRTC_SUCCESS) \
+        {\
+            std::cerr << "\nerror: " #x " failed with error " << nvrtcGetErrorString(result) << '\n';\
+            exit(1);\
+        }\
+    } while(0)
+#endif
+
+
 namespace napalm
 {
     namespace cuda
@@ -27,32 +41,33 @@ namespace napalm
             default:
                 break;
             }
-            cl_int err = CL_SUCCESS;
-            if (m_program_status)
-            {
-                cl_device_id dev_id = m_ctx->getCLDevice();
-                err = clBuildProgram(m_program,
-                    1,
-                    &dev_id,
-                    compiler_options,
-                    nullptr,
-                    nullptr
-                );
-            }
-            if (err != CL_SUCCESS)
-                m_program_status = false;
-
-            if (err != CL_SUCCESS && (dt == napalm::ProgramData::DATA_TYPE_SOURCE_FILE_NAME || 
-                dt == napalm::ProgramData::DATA_TYPE_SOURCE_DATA))
-            {
-                std::string m_build_log;
-                size_t log_size = 0;
-                clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
-                m_build_log.resize(log_size);
-                clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, log_size, &m_build_log[0], nullptr);
-                std::cout << m_build_log << std::endl;
-                handleError(err, "Program build failed");
-            }
+            //CUresult res = CUDA_SUCCESS;
+            //if (m_program_status)
+            //{
+            //    cuModuleLoadData(&m_program, )
+            //    cl_device_id dev_id = m_ctx->getCLDevice();
+            //    err = clBuildProgram(m_program,
+            //        1,
+            //        &dev_id,
+            //        compiler_options,
+            //        nullptr,
+            //        nullptr
+            //    );
+            //}
+            //if (err != CL_SUCCESS)
+            //    m_program_status = false;
+            //
+            //if (err != CL_SUCCESS && (dt == napalm::ProgramData::DATA_TYPE_SOURCE_FILE_NAME || 
+            //    dt == napalm::ProgramData::DATA_TYPE_SOURCE_DATA))
+            //{
+            //    std::string m_build_log;
+            //    size_t log_size = 0;
+            //    clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
+            //    m_build_log.resize(log_size);
+            //    clGetProgramBuildInfo(m_program, m_ctx->getCLDevice(), CL_PROGRAM_BUILD_LOG, log_size, &m_build_log[0], nullptr);
+            //    std::cout << m_build_log << std::endl;
+            //    handleError(err, "Program build failed");
+            //}
         }
         napalm::Kernel & napalm::cuda::CUDAProgram::getKernel(const char * kernel_name)
         {
@@ -76,15 +91,7 @@ namespace napalm
         }
         ProgramBinary CUDAProgram::getBinary()
         {
-            size_t num_binaries;
-            clGetProgramInfo(m_program, CL_PROGRAM_BINARY_SIZES, 0, nullptr, &num_binaries);
-            std::vector<size_t> num_binarie(num_binaries);
-            clGetProgramInfo(m_program, CL_PROGRAM_BINARY_SIZES, num_binaries, num_binarie.data(), nullptr);
-            assert((num_binarie.size() == 1 || num_binarie[1] == 0) && "More then one binaries!");
-
-            m_program_binary.resize(num_binarie[0]);
             char * data = &m_program_binary[0];
-            clGetProgramInfo(m_program, CL_PROGRAM_BINARIES, num_binaries, &data, nullptr);
             return ProgramBinary{data, m_program_binary.size()};
         }
         CUDAProgram::~CUDAProgram()
@@ -94,76 +101,126 @@ namespace napalm
                 delete k.second;
                 k.second = nullptr;
             }
-            cl_int err = clReleaseProgram(m_program);
+            CUresult err = cuModuleUnload(m_program);
             handleError(err, "CL Release program!");
         }
         bool CUDAProgram::createProgramWithSourceData(const ProgramData & data)
         {
-            cl_int err = CL_SUCCESS;
-            m_program = clCreateProgramWithSource(m_ctx->getCLContext(), 1, (const char **)&data.data,
-                &data.data_size, &err);
-            handleError(err, "OpenCL Create program with source data");
-            return true;
+#ifdef HAVE_NVRTC
+            compileRuntimeCudaKernel(data.data);
+            CUresult err = CUDA_SUCCESS;
+            err = cuModuleLoadData(&m_program, m_program_binary.c_str());
+            bool ret = true;
+            if (err != CUDA_SUCCESS)
+            {
+                ret = false;
+            }
+            handleError(err, "CUDA load Program With Binary Data!");
+            return ret;
+#else
+            return false;
+#endif
         }
         bool CUDAProgram::createProgramWithSourceFile(const ProgramData & data)
         {
+#ifdef HAVE_NVRTC
             std::string file_data = loadFile(data.data, false);
             if (file_data.empty())
                 return false;
-            cl_int err = CL_SUCCESS;
-            const char * file_data_ptr = file_data.c_str();
-            size_t file_data_l = file_data.size();
-            m_program = clCreateProgramWithSource(m_ctx->getCLContext(), 1, &file_data_ptr,
-                &file_data_l, &err);
-            handleError(err, "OpenCL Create program with source data");
-            return true;
+            compileRuntimeCudaKernel(file_data.c_str());
+            CUresult err = CUDA_SUCCESS;
+            err = cuModuleLoadData(&m_program, m_program_binary.c_str());
+            bool ret = true;
+            if (err != CUDA_SUCCESS)
+            {
+                ret = false;
+            }
+            handleError(err, "CUDA load Program With Binary Data!");
+            return ret;
+#else
+            return false;
+#endif
         }
         bool CUDAProgram::createProgramWithBinaryData(const ProgramData & data)
         {
             bool ret = true;
-            cl_int bin_status = CL_SUCCESS;
-            cl_int err = CL_SUCCESS;
-            cl_device_id dev_id = m_ctx->getCLDevice();
-            m_program = clCreateProgramWithBinary(m_ctx->getCLContext(), 1, &dev_id,
-                &data.data_size, (const unsigned char**)&data.data, &bin_status, &err);
-            if (bin_status != CL_SUCCESS)
+            CUresult err = CUDA_SUCCESS;
+            err = cuModuleLoadData(&m_program, data.data);
+            if (err != CUDA_SUCCESS)
             {
                 ret = false;
             }
-            handleError(err, "CL build Program With Binary Data!");
+            handleError(err, "CUDA load Program With Binary Data!");
+            m_program_binary.resize(data.data_size);
+            memcpy(&m_program_binary[0], data.data, data.data_size);
             return ret;
 
         }
         bool CUDAProgram::createProgramWithBinaryFile(const ProgramData & data)
         {
             bool ret = true;
-            std::string file_data = loadFile(data.data, true);
-            cl_int bin_status = CL_SUCCESS;
-            cl_int err = CL_SUCCESS;
-            cl_device_id dev_id = m_ctx->getCLDevice();
-            const char * file_data_ptr = file_data.c_str();
-            size_t file_data_l = file_data.size();
-            m_program = clCreateProgramWithBinary(m_ctx->getCLContext(), 1, &dev_id,
-                &file_data_l, (const unsigned char **)&file_data_ptr, 
-                &bin_status, &err);
-            if (bin_status != CL_SUCCESS)
+            CUresult err = CUDA_SUCCESS;
+            err = cuModuleLoad(&m_program, data.data);
+            if (err != CUDA_SUCCESS)
             {
                 ret = false;
             }
-            handleError(err, "CL build Program With Binary Data!");
+            handleError(err, "CUDA load Program With Binary File!");
+            std::string file_data = loadFile(data.data, false);
+            if (file_data.empty())
+                return false;
+
+            m_program_binary.resize(file_data.size());
+            memcpy(&m_program_binary[0], file_data.data(), file_data.size());
+
             return ret;
         }
-        CUDAKernel::CUDAKernel(const CUDAContext * ctx, cl_program program, const char * kernel_name) :
+#ifdef HAVE_NVRTC
+        void CUDAProgram::compileRuntimeCudaKernel(const char * source)
+        {
+            nvrtcProgram prog;
+            NVRTC_SAFE_CALL(
+                nvrtcCreateProgram(&prog,         // prog
+                    source,         // buffer
+                    "napalm cuda runtime compile",    // name
+                    0,             // numHeaders
+                    NULL,          // headers
+                    NULL));        // includeNames
+                                   // Compile the program for compute_30 with fmad disabled.
+                                   //TODO
+            const char *opts[] = { "--gpu-architecture=compute_50" }; //TODO from outside, opencl to and --include-path needs to be set
+            nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
+                1,     // numOptions
+                opts); // options
+                       // Obtain compilation log from the program.
+            size_t logSize;
+            NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize));
+            char *log = new char[logSize];
+            NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log));
+            std::cout << log << '\n';
+            delete[] log;
+            if (compileResult != NVRTC_SUCCESS) {
+                exit(1);
+            }
+            // Obtain PTX from the program.
+            size_t ptxSize;
+            NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize));
+            m_program_binary.resize(ptxSize);
+            NVRTC_SAFE_CALL(nvrtcGetPTX(prog, &m_program_binary[0]));
+            // Destroy the program.
+            NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog));
+        }
+#endif
+        CUDAKernel::CUDAKernel(const CUDAContext * ctx, CUmodule program, const char * kernel_name) :
             m_ctx(ctx)
         {
-            cl_int err = CL_SUCCESS;
-            m_kernel = clCreateKernel(program, kernel_name, &err);
-            handleError(err, "CL Create Kernel: " + std::string(kernel_name));
+            CUresult err = cuModuleGetFunction(&m_kernel, program, kernel_name);
+            handleError(err, "Cuda Create Kernel: " + std::string(kernel_name));
         }
         void CUDAKernel::setArg(int32_t idx, void * val, size_t sizeof_arg)
         {
-            cl_int err = clSetKernelArg(m_kernel, cl_uint(idx), sizeof_arg, val);
-            handleError(err, "Set kernel argumentum");
+            m_arg_sizes[idx] = sizeof_arg;
+            m_arg_ptrs[idx] = val;
         }
         void CUDAKernel::setArgs(int32_t num_args, void ** argument, size_t * argument_sizes)
         {
@@ -182,13 +239,13 @@ namespace napalm
                 size_t(block_size.y),
                 size_t(block_size.z)};
 
-            cl_int err = clEnqueueNDRangeKernel(m_ctx->getCQ(command_queue), m_kernel, 3, global_w_offset,
-                global_w_size, local_w_size, 0, nullptr, nullptr);
+            ///TODO shared memory size
+            CUresult res = cuLaunchKernel(m_kernel, num_blocks.x, num_blocks.y, num_blocks.z,
+                block_size.x, block_size.y, block_size.z, 0, m_ctx->getCQ(command_queue), m_arg_ptrs, nullptr);
+            handleError(res, "CU launch kernel");
         }
         CUDAKernel::~CUDAKernel()
         {
-            cl_int err = clReleaseKernel(m_kernel);
-            handleError(err, "OpenCL Release kernel object");
         }
     }
 }

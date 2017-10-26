@@ -13,10 +13,9 @@ namespace napalm
                @PROGRAM_SOURCE@
             };
 
-            if (strcmp(m_store->getContext()->getContextKind(), "OpenCL") == 0)
             {
-                auto it = program_data.find("OpenCL");
-                assert(it != program_data.end() && "Program not available for OpenCL Context!");
+                auto it = program_data.find(m_store->getContext()->getContextKind());
+                assert(it != program_data.end() && "Program not available for Context!");
                 m_program = m_store->addProgram(it->second.first, it->second.second);
             }
         }

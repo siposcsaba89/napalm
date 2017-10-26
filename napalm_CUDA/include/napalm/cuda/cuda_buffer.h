@@ -16,7 +16,7 @@ namespace napalm {
             virtual ArgumentPropereties getARgumentPropereties();
             virtual ~CUDABuffer();
         private:
-            cl_mem m_buffer;
+            CUdeviceptr m_buffer;
             const CUDAContext * m_ctx;
             void * m_map_address = nullptr;
         };

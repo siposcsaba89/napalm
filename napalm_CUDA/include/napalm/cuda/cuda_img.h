@@ -21,9 +21,12 @@ namespace napalm {
             virtual ArgumentPropereties getARgumentProperetiesWritable();
             virtual ~CUDAImg();
         private:
-            cl_mem m_buffer;
+            CUarray m_buffer;
+            CUtexObject m_texture;
+            CUsurfObject m_surface;
             const CUDAContext * m_ctx;
             void * m_map_address = nullptr;
+            int32_t m_channel_byte_count = 0;
         };
     }
 }

@@ -130,7 +130,7 @@ namespace napalm
             {
                 ret = false;
             }
-            handleError(err, "CL build Program With Binary Data!");
+            //handleError(err, "CL build Program With Binary Data!");
             return ret;
 
         }

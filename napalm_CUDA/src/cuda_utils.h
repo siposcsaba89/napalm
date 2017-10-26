@@ -1,5 +1,5 @@
 #pragma once
-#include <CL/cl.h>
+#include <cuda.h>
 #include <string>
 #include <vector>
 #include <napalm/napalm.h>
@@ -8,23 +8,22 @@ namespace napalm
 {
     namespace cuda
     {
-        std::string getPlatformInfo(const std::vector<cl_platform_id> & platform_ids,
-            int platform_id, int info_name);
+        //std::string getPlatformInfo(const std::vector<cl_platform_id> & platform_ids,
+        //    int platform_id, int info_name);
+        //
+        //std::string getDevInfo(const std::vector<cl_device_id> & dev_ids,
+        //    int dev_id, int info_name);
 
-        std::string getDevInfo(const std::vector<cl_device_id> & dev_ids,
-            int dev_id, int info_name);
+        void handleError(CUresult err, const std::string & msg);
 
-        void handleError(cl_int err, const std::string & msg);
+        //int32_t getCLMemFlag(MemFlag mem_flag);
+        //
+        //int32_t getCLMapFlag(MapMode map_mode);
 
-        int32_t getCLMemFlag(MemFlag mem_flag);
-
-        int32_t getCLMapFlag(MapMode map_mode);
-
-        cl_channel_type getCLDataType(DataType data_type);
-        cl_channel_order getCLChannelOrder(ImgChannelFormat channel_format);
-
-        void getCLImageForamt(ImgFormat format, ImgRegion size,
-            cl_image_format &  cl_img_f, cl_image_desc & cl_img_d);
+        //cl_channel_type getCLDataType(DataType data_type);
+        //cl_channel_order getCLChannelOrder(ImgChannelFormat channel_format);
+        
+        CUarray_format getCUDAImageForamt(ImgFormat format, unsigned int & num_channels, unsigned int & flags, int & bytes_per_channel);
 
         std::string loadFile(const char * fname, bool binary);
     }

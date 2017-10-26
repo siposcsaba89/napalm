@@ -13,32 +13,29 @@ namespace napalm {
     {
         CUDAContext::CUDAContext(int32_t platform_id, int32_t device_id, int32_t stream_count) : Context()
         {
-            cl_uint num_platform;
-            clGetPlatformIDs(0, NULL, &num_platform);
-            std::vector<cl_platform_id> platform_ids(num_platform);
-            if (num_platform > 0)
+            CUresult res = cuInit(0);
+            napalm::cuda::handleError(res, "Cu init");
             {
-                clGetPlatformIDs(num_platform, platform_ids.data(), nullptr);
-                if (platform_id < 0 || platform_id >= int(num_platform))
+                if (platform_id < 0 || platform_id >= int(2))
                 {
                     assert(false && "incorrect platfom id");
                     printf("Incorrect platform id %d! \n", platform_id);
                     exit(EXIT_FAILURE);
                 }
                 {
+                    int version = 0;
+                    CUresult err = cuDriverGetVersion(&version);
+                    handleError(err, "Cuda get driver version");
+                    std::string platform_name =
+                        "NVidia" + std::string(" Version:") +
+                        std::to_string(version);
                     printf("Selected platform vendor: %s %s \n", 
-                        getPlatformInfo(platform_ids, platform_id, CL_PLATFORM_VENDOR).c_str(),
-                        getPlatformInfo(platform_ids, platform_id, CL_PLATFORM_VERSION).c_str());
+                        "NVidia Version: ",
+                        std::to_string(version).c_str());
                 }
             }
-            else
-            {
-                assert(false && "Not found any platform");
-                printf("Not found any platform! \n");
-                exit(EXIT_FAILURE);
-            }
-            cl_uint num_devices;
-            clGetDeviceIDs(platform_ids[platform_id], CL_DEVICE_TYPE_ALL, 0, nullptr, &num_devices);
+            int num_devices;
+            res =  cuDeviceGetCount(&num_devices);
             if (num_devices == 0)
             {
                 assert(false && "Not found any devices");
@@ -51,28 +48,28 @@ namespace napalm {
                 printf("Incorrect device id %d! \n", device_id);
                 exit(EXIT_FAILURE);
             }
-            std::vector<cl_device_id> devices(num_devices);
-            clGetDeviceIDs(platform_ids[platform_id], CL_DEVICE_TYPE_ALL, num_devices, devices.data(), nullptr);
-            m_cl_device_id = devices[device_id];
+            res = cuDeviceGet(&m_cuda_device_id, device_id);
+            handleError(res, "Cuda get device");
 
-
+            std::string dev_name;
+            dev_name.resize(1024);
+            res = cuDeviceGetName(&dev_name[0], int(dev_name.size()), m_cuda_device_id);
+            handleError(res, "Cuda get device name");
             printf("Selected device name: %s \n",
-                getDevInfo(devices, device_id, CL_DEVICE_NAME).c_str());
+                dev_name.c_str());
 
-            cl_context_properties prop[] =
-            { CL_CONTEXT_PLATFORM, (cl_context_properties)platform_ids[platform_id],
-                0 };
-            cl_int err = 0;
-            m_cl_context =  clCreateContext(prop, 1, &m_cl_device_id, nullptr, nullptr, &err);
-            
-            handleError(err, "Context creating");
-            printf("OpenCL context created! \n");
+            res = cuCtxCreate(&m_cuda_context, CU_CTX_MAP_HOST | CU_CTX_SCHED_BLOCKING_SYNC, m_cuda_device_id);
+            handleError(res, "Cuda ctx create");
 
+
+            printf("CUDA context created! \n");
+
+            registerContext();
             m_command_queues.resize(stream_count);
             for (int32_t i = 0; i < stream_count; ++i)
             {
-                m_command_queues[i] = clCreateCommandQueue(m_cl_context, m_cl_device_id, 0, &err);
-                handleError(err, "ClCommandQueue creating");
+                res = cuStreamCreate(&m_command_queues[i], CU_STREAM_NON_BLOCKING);
+                handleError(res, "CUDACommandQueue creating");
             }
         }
 
@@ -93,34 +90,43 @@ namespace napalm {
 
         const char * CUDAContext::getContextKind() const
         {
-            return "OpenCL";
+            return "CUDA";
         }
         
          void CUDAContext::finish(int32_t command_queue) const
          {
-            cl_int err = clFinish(m_command_queues[command_queue]);
-            handleError(err, "ClCommandQueue finish");
+            CUresult res = cuStreamSynchronize(m_command_queues[command_queue]);
+            handleError(res, "CUDACommandQueue finish");
+         }
+
+         void CUDAContext::registerContext() const
+         {
+             CUresult res = cuCtxSetCurrent(m_cuda_context);
+             handleError(res, "CUDA register context");
          }
         
         CUDAContext::~CUDAContext()
         {
             for (auto & cq : m_command_queues)
-                clReleaseCommandQueue(cq);
+                cuStreamDestroy(cq);
 
-            clReleaseContext(m_cl_context);
+            cuCtxDestroy(m_cuda_context);
         }
-        cl_context CUDAContext::getCLContext() const
+        
+        CUcontext CUDAContext::getCLContext() const
         {
-            return m_cl_context;
+            return m_cuda_context;
         }
-        cl_command_queue CUDAContext::getCQ(int32_t id) const
+        
+        CUstream CUDAContext::getCQ(int32_t id) const
         {
             assert(id < int(m_command_queues.size()) && id >= 0 && "Wrong OpenCL command queue id");
             return m_command_queues[id];
         }
-        cl_device_id CUDAContext::getCLDevice() const
+        
+        CUdevice CUDAContext::getCUDADevice() const
         {
-            return m_cl_device_id;
+            return m_cuda_device_id;
         }
     }
 }

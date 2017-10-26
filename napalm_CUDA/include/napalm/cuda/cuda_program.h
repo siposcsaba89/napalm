@@ -9,14 +9,16 @@ namespace cuda
 {
     struct CUDAKernel : public Kernel
     {
-        CUDAKernel(const CUDAContext * ctx, cl_program program, const char * kernel_name);
+        CUDAKernel(const CUDAContext * ctx, CUmodule program, const char * kernel_name);
         virtual void setArg(int32_t idx, void * val, size_t sizeof_arg);
         virtual void setArgs(int32_t num_args, void ** argument, size_t * argument_sizes);
         virtual void execute(int32_t command_queue, ImgRegion num_blocks, ImgRegion block_sizes);
         virtual ~CUDAKernel();
     private:
-        cl_kernel m_kernel;
+        CUfunction m_kernel;
         const CUDAContext * m_ctx = nullptr;
+        size_t m_arg_sizes[128];
+        void * m_arg_ptrs[128];
     };
 
     struct CUDAProgram : public Program
@@ -31,9 +33,12 @@ namespace cuda
         bool createProgramWithSourceFile(const ProgramData & data);
         bool createProgramWithBinaryData(const ProgramData & data);
         bool createProgramWithBinaryFile(const ProgramData & data);
+#ifdef HAVE_NVRTC
+        void compileRuntimeCudaKernel(const char * source);
+#endif
     private:
         const CUDAContext * m_ctx = nullptr;
-        cl_program m_program;
+        CUmodule m_program;
         bool m_program_status = false;
         std::map<std::string, CUDAKernel*> m_kernels;
         std::string m_program_binary;

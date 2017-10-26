@@ -67,6 +67,10 @@ source_group(napalm_CUDA FILES ${PUBLIC_HDRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ::cuda) #TODO
 
+if (CUDA_RUNTIME_COMPILE)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAVE_NVRTC)
+endif()
+
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/napalm/cuda/${PROJECT_NAME}_export.h)
 
