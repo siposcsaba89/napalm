@@ -94,8 +94,11 @@ namespace napalm
                 delete k.second;
                 k.second = nullptr;
             }
-            cl_int err = clReleaseProgram(m_program);
-            handleError(err, "CL Release program!");
+            if (m_program != nullptr)
+            {
+                cl_int err = clReleaseProgram(m_program);
+                handleError(err, "CL Release program!");
+            }
         }
         bool CLProgram::createProgramWithSourceData(const ProgramData & data)
         {
