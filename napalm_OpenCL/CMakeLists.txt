@@ -70,7 +70,7 @@ install(FILES
 install(EXPORT ${PROJECT_NAME}-targets NAMESPACE :: DESTINATION lib/cmake/${PROJECT_NAME})
 
 install(FILES
-    ${CMAKE_BINARY_DIR}/gen/${PROJECT_NAME}/${PROJECT_NAME}_export.h
+    ${CMAKE_BINARY_DIR}/gen/napalm/opencl/${PROJECT_NAME}_export.h
 	${PUBLIC_HDRS}
     DESTINATION include/napalm/${PROJECT_NAME}/napalm/opencl)
 

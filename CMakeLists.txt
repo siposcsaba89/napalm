@@ -20,10 +20,14 @@ set_property(GLOBAL PROPERTY USE_FOLDERS On)
 set(PUBLIC_HEADERS
     napalm/napalm.h
     napalm/program_store.h
+    napalm/context_manager.h
+    napalm/program_store.h
 )
 
 set(SRCS
     napalm/napalm.cpp
+    napalm/program_store.cpp
+    napalm/context_manager.cpp
     napalm/program_store.cpp
 )
 
@@ -76,6 +80,11 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets DESTINATION
 install(FILES 
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake 
         ${CMAKE_CURRENT_BINARY_DIR}/gen/${PROJECT_NAME}-config-version.cmake
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_file.cmake.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreatePrograms.cmake
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/program_template.cpp.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/program_template.h.in
+        
     DESTINATION 
         lib/cmake/${PROJECT_NAME})
     

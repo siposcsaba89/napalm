@@ -134,6 +134,16 @@ namespace napalm
             setArgs(int32_t(num_args), arguments, args_sizeof);
             execute(command_queue, num_blocks, block_sizes);
         }
+        template <typename ... Types>
+        void setArgs(Types&&... args)
+        {
+            size_t num_args = sizeof...(args);
+            void* arguments[sizeof...(args)];
+            size_t args_sizeof[sizeof...(args)];
+            fillArgVector(0, arguments, args_sizeof, args...);
+            setArgs(int32_t(num_args), arguments, args_sizeof);
+        }
+
         virtual ~Kernel() {}
     private:
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof)
@@ -159,6 +169,16 @@ namespace napalm
         }
 
         template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Buffer * arg, Types&&... Fargs)
+        {
+            auto prop = arg->getARgumentPropereties();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg;
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+
+        template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Img & arg, Types&&... Fargs)
         {
             auto prop = arg.getARgumentPropereties();
@@ -168,9 +188,27 @@ namespace napalm
         }
 
         template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Img * arg, Types&&... Fargs)
+        {
+            auto prop = arg->getARgumentPropereties();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg;
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+        template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Img & arg, Types&&... Fargs)
         {
             auto prop = arg.getARgumentProperetiesWritable();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg;
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+        template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Img * arg, Types&&... Fargs)
+        {
+            auto prop = arg->getARgumentProperetiesWritable();
             arg_address[arg_idx] = prop.arg_ptr;
             arg_sizeof[arg_idx] = prop.sizeof_arg;
             fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
@@ -200,16 +238,27 @@ namespace napalm
             DATA_TYPE_BINARY_FILE_NAME = 2,
             DATA_TYPE_SOURCE_FILE_NAME = 3
         };
-        const char * data = nullptr;
+        char * data = nullptr;
         size_t data_size = 0;
         DataType data_type;
-        std::string timestamp = "";
+        const char * timestamp = "";
         ProgramData() {}
-        ProgramData(DataType type, const char * data, size_t data_size_ = 0, const std::string & timestamp = "") :
-            data_type(type), data(data), data_size(data_size_), timestamp(timestamp) {
-            if (data_size == 0)
-                data_size = strlen(data);
+        ProgramData(DataType type, const std::initializer_list<unsigned char> & l, size_t data_size_ = 0, const char * timestamp = "") :
+            data_type(type), data_size(data_size_), timestamp(timestamp) {
+            data_size = l.size();
+            data = new char[data_size];
+            memcpy(data, l.begin(), data_size);
         }
+        ProgramData(DataType type, const char * d, size_t data_size_ = 0, const char * timestamp = "") :
+            data_type(type), data_size(data_size_), timestamp(timestamp) {
+            if (data_size == 0)
+                data_size = strlen(d);
+            data = new char[data_size];
+            memcpy(data, d, data_size);
+        }
+        ~ProgramData() { if (data) delete[] data; data = nullptr; }
+        ProgramData(const ProgramData &) = delete;
+        ProgramData& operator =(const ProgramData &) = delete;
     };
 
     class Context

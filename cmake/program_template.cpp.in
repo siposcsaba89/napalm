@@ -8,6 +8,8 @@ namespace napalm
         @pn@::@pn@(ProgramStore & store):
             m_store(&store)
         {
+@PROGRAM_DATA@
+
             std::map<std::string, std::pair<std::string, ProgramData>> program_data =
             { 
                @PROGRAM_SOURCE@

@@ -18,6 +18,7 @@ namespace napalm
         {
             printf("Please create %s named context before use!", name.c_str());
             assert(false && "Context does not exists!!!");
+            return nullptr;
         }
     }
     void ContextManager::addContext(const std::string & name, Context * ctx)

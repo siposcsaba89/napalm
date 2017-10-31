@@ -21,7 +21,9 @@ endforeach()
 
 foreach(pn ${PROGRAM_NAMES})
     message(STATUS "${pn} : ${${pn}}")
+    set(PROGRAM_DATA "")
     set(PROGRAM_SOURCE "")
+    
     foreach(f ${${pn}})
         get_filename_component(F_EXT ${f} EXT)
         set(FILE_EXT_FOUND 0)
@@ -68,15 +70,17 @@ foreach(pn ${PROGRAM_NAMES})
             # Read hex data from file
             file(READ ${FILE_TO_READ} FILEDATA HEX)
             # Convert hex data for C compatibility
-            string(REGEX REPLACE "([0-9a-f][0-9a-f])" "\\\\x\\1" FILEDATA ${FILEDATA})
+            #string(REGEX REPLACE "([0-9a-f][0-9a-f])" "\\\\x\\1" FILEDATA ${FILEDATA})
+            string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1," FILEDATA ${FILEDATA})
+
             # Append data to output file
         else()
             get_filename_component(FILENAME ${f} NAME)
             set(FILEDATA "${PROGRAM_RUNTIME_SOURCE_DIR}/${FILENAME}")
         endif()
         message(STATUS "Program file ${f} added: ${TS}")
-
-        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "{\"${TARGET_API}\",{\"${pn}\", { ${DATA_TYPE}, {\"${FILEDATA}\"}, 0, \"${TS}\"}}},")
+        string(CONCAT PROGRAM_DATA ${PROGRAM_DATA} "            std::string ${pn}_data_${TARGET_API} = {${FILEDATA}}\;")
+        string(CONCAT PROGRAM_SOURCE ${PROGRAM_SOURCE} "{\"${TARGET_API}\",{\"${pn}\", { ${DATA_TYPE}, ${pn}_data_${TARGET_API}.c_str(), 0, \"${TS}\"}}},")
     endforeach()
     configure_file(${program_template_h} "napalm/gen/programs/${pn}.h" @ONLY)
     configure_file(${program_template_cpp} "napalm/gen/programs/${pn}.cpp" @ONLY)
