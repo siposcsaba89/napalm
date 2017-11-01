@@ -147,9 +147,7 @@ namespace napalm
         virtual ~Kernel() {}
     private:
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof)
-        {
-            std::cout << "Uress" << std::endl;
-        }
+        {}
 
         template <typename T, typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, T && arg, Types&&... Fargs)
