@@ -170,9 +170,9 @@ namespace napalm
         {
         }
 
-        ArgumentPropereties CUDAImg::getARgumentPropereties()
+        ArgumentPropereties CUDAImg::getARgumentPropereties() const
         {
-            return ArgumentPropereties(&m_texture, sizeof(m_texture));
+            return ArgumentPropereties((void*)&m_texture, sizeof(m_texture));
         }
 
         ArgumentPropereties CUDAImg::getARgumentProperetiesWritable()

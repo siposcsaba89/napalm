@@ -17,7 +17,7 @@ namespace napalm {
             virtual void * map(MapMode mode, const ImgRegion & origin,
                 const ImgRegion & region, bool block_queue, int32_t command_queue);
             virtual void unmap(int32_t command_queue);
-			virtual ArgumentPropereties getARgumentPropereties();
+			virtual ArgumentPropereties getARgumentPropereties() const;
 			virtual ArgumentPropereties getARgumentProperetiesWritable();
             virtual ~CLImg();
         private:

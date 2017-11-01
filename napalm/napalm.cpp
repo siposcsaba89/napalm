@@ -18,8 +18,8 @@ namespace napalm
 
     class BackendLoader
     {
-        typedef PlatformAndDeviceInfo*(__cdecl *get_info_func)();
-        typedef Context*(__stdcall *create_context_func)(int32_t platform_id, int32_t device_id, int32_t stream_count);
+        typedef PlatformAndDeviceInfo*(*get_info_func)();
+        typedef Context*(*create_context_func)(int32_t platform_id, int32_t device_id, int32_t stream_count);
         BackendLoader(const BackendLoader &) = delete;
         BackendLoader & operator = (const BackendLoader &) = delete;
         BackendLoader(const std::string & backend)
@@ -46,6 +46,7 @@ namespace napalm
 #if _DEBUG
                 debug_ext = "_d";
 #endif
+#ifdef WIN32
                 std::string dll_name = (std::string("napalm_") + backend + debug_ext + ".dll");
                 hGetProcIDDLL = LoadLibrary(dll_name.c_str());
                 if (!hGetProcIDDLL) {
@@ -68,10 +69,18 @@ namespace napalm
                     std::cout << "could not locate the function napalm::cl::createContext" << std::endl;
                     backend_loaded = false;
                 }
+#else
+#error ass
+#endif
             }
         }
 
-        ~BackendLoader() { if (hGetProcIDDLL != nullptr) FreeLibrary(hGetProcIDDLL); }
+        ~BackendLoader() 
+        { 
+#if WIN32
+            if (hGetProcIDDLL != nullptr) FreeLibrary(hGetProcIDDLL); 
+#endif
+        }
     public:
         PlatformAndDeviceInfo* getPlatformAndDeviceInfo() const
         {
@@ -90,7 +99,9 @@ namespace napalm
         get_info_func get_info = nullptr;
         create_context_func create_context = nullptr;
         bool backend_loaded = true;
+#if WIN32
         HINSTANCE hGetProcIDDLL = nullptr;
+#endif
     };
 
 

@@ -105,7 +105,7 @@ namespace napalm
         virtual void * map(MapMode mode, const ImgRegion & origin,
             const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
-        virtual ArgumentPropereties getARgumentPropereties() = 0;
+        virtual ArgumentPropereties getARgumentPropereties() const = 0;
         virtual ArgumentPropereties getARgumentProperetiesWritable() = 0;
         virtual ~Img() {}
     public:

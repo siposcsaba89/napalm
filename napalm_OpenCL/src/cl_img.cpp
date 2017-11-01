@@ -110,9 +110,9 @@ namespace napalm
             handleError(err, "OpenCL unmap Image");
         }
 
-        ArgumentPropereties CLImg::getARgumentPropereties()
+        ArgumentPropereties CLImg::getARgumentPropereties() const
         {
-            return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
+            return ArgumentPropereties((void*)&m_buffer, sizeof(m_buffer));
         }
         
         ArgumentPropereties CLImg::getARgumentProperetiesWritable()
