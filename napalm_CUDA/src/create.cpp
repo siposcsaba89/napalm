@@ -58,3 +58,13 @@ NAPALM_CUDA_EXPORT void destroyPlatformAndDeviceInfo(napalm::PlatformAndDeviceIn
 {
     return delete dev_info;
 }
+
+NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * napalm::cuda::getPlatformAndDeviceInfoCUDA()
+{
+    return ::getPlatformAndDeviceInfo();
+}
+
+NAPALM_CUDA_EXPORT napalm::Context * napalm::cuda::createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count)
+{
+    return ::createContext(platform_id, device_id, stream_count);
+}

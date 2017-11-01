@@ -55,3 +55,13 @@ NAPALM_OPENCL_EXPORT void destroyPlatformAndDeviceInfo(napalm::PlatformAndDevice
 {
     return delete dev_info;
 }
+
+NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * napalm::cl::getPlatformAndDeviceInfoOpenCL()
+{
+    return ::getPlatformAndDeviceInfo();
+}
+
+NAPALM_OPENCL_EXPORT napalm::Context * napalm::cl::createContextOpenCL(int32_t platform_id, int32_t device_id, int32_t stream_count)
+{
+    return ::createContext(platform_id, device_id, stream_count);
+}

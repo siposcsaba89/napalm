@@ -15,6 +15,9 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 
+option(BUILD_TIME_LINK_TO_NAPALM_CUDA "Link to napalm_CUDA in build time" FALSE)
+option(BUILD_TIME_LINK_TO_NAPALM_OPENCL "Link to napalm_OpenCL in build time" FALSE)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS On) 
 
 set(PUBLIC_HEADERS
@@ -64,6 +67,14 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
     
 )
+if (BUILD_TIME_LINK_TO_NAPALM_CUDA AND TARGET ::napalm_CUDA)
+    target_link_libraries(napalm PRIVATE ::napalm_CUDA)
+	target_compile_definitions(napalm PRIVATE -DBUILD_TIME_LINK_TO_NAPALM_CUDA)
+endif()
+if (BUILD_TIME_LINK_TO_NAPALM_OPENCL AND TARGET ::napalm_OpenCL)
+    target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
+	target_compile_definitions(napalm PRIVATE -DBUILD_TIME_LINK_TO_NAPALM_OPENCL)
+endif()
 
 #target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
 
@@ -114,6 +125,6 @@ if (BUILD_EXAMPLES)
     set_target_properties(napalm_simple PROPERTIES DEBUG_POSTFIX _d)
     set_target_properties(napalm_simple PROPERTIES FOLDER examples)
     #target_include_directories(napalm_sim PRIVATE ${OpenCV_INCLUDE_DIRS})
-    target_link_libraries(napalm_simple PRIVATE ::napalm ::napalm_OpenCL)#${OpenCV_LIBRARIES}
+    target_link_libraries(napalm_simple PRIVATE ::napalm)#${OpenCV_LIBRARIES}
     install(TARGETS napalm_simple DESTINATION bin)
 endif()

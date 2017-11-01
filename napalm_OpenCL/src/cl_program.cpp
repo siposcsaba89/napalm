@@ -38,6 +38,12 @@ namespace napalm
                     nullptr,
                     nullptr
                 );
+                if (err == CL_SUCCESS)
+                {
+                    cl_uint num_kernels = 0;
+                    err = clCreateKernelsInProgram(m_program, 0, nullptr, &num_kernels);
+                    if (num_kernels == 0) err = CL_INVALID_BINARY;
+                }
             }
             if (err != CL_SUCCESS)
                 m_program_status = false;
