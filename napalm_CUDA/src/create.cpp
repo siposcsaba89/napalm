@@ -46,7 +46,11 @@ NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoCUDA(
                     napalm::cuda::handleError(res, "Get device");
                     res = cuDeviceGetName(&dev_name[0], int(dev_name.size()), dev);
                     ret.device_names[0][j] = new char[dev_name.size()];
+#ifdef WIN32
+                    strcpy_s(ret.device_names[0][j], dev_name.size(), dev_name.c_str());
+#else
                     std::strcpy(ret.device_names[0][j], dev_name.c_str());
+#endif
                 }
             }
         }

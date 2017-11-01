@@ -30,7 +30,11 @@ NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoOpe
                 napalm::cl::getPlatformInfo(platform_ids, int(i), CL_PLATFORM_VENDOR).c_str() + std::string(" Version:") +
                 napalm::cl::getPlatformInfo(platform_ids, int(i), CL_PLATFORM_VERSION);
             ret.platforms[i] = new char[platform_name.size()];
+#ifdef WIN32
+            strcpy_s(ret.platforms[i], platform_name.size(), platform_name.c_str());
+#else
             std::strcpy(ret.platforms[i], platform_name.c_str());
+#endif
             cl_uint num_devices;
             clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_ALL, 0, nullptr, &num_devices);
             ret.num_devices[i] = int32_t(num_devices);
@@ -43,7 +47,12 @@ NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoOpe
                 {
                     std::string dev_name = napalm::cl::getDevInfo(devices, int(j), CL_DEVICE_NAME);
                     ret.device_names[i][j] = new char[dev_name.size()];
+#ifdef WIN32
+                    strcpy_s(ret.device_names[i][j], dev_name.size(), dev_name.c_str());
+#else
                     std::strcpy(ret.device_names[i][j], dev_name.c_str());
+#endif
+
                 }
             }
         }

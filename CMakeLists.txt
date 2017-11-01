@@ -81,7 +81,7 @@ if (BUILD_TIME_LINK_TO_NAPALM_OPENCL AND TARGET ::napalm_OpenCL)
 endif()
 
 if (UNIX)
-    target_link_libraries(napalm PRIVATE dl)
+    target_link_libraries(napalm ${TARGET_LINK_LIBRARIES_TYPE} dl)
 endif (UNIX)
 
 include(CMakePackageConfigHelpers)

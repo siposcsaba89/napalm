@@ -309,12 +309,20 @@ namespace napalm
                 device_names[i] = new char *[num_devices[i]];
                 size_t platform_name_l = strlen(other.platforms[i]) + 1;
                 platforms[i] = new char[platform_name_l];
+#ifdef WIN32
+                strcpy_s(platforms[i], platform_name_l, other.platforms[i]);
+#else
                 std::strcpy(platforms[i], other.platforms[i]);
+#endif
                 for (int j = 0; j < num_devices[i]; ++j)
                 {
                     size_t dev_name_size = strlen(other.device_names[i][j]) + 1;
                     device_names[i][j] = new char[dev_name_size];
+#ifdef WIN32
+                    strcpy_s(device_names[i][j], dev_name_size, other.device_names[i][j]);
+#else
                     std::strcpy(device_names[i][j], other.device_names[i][j]);
+#endif
                 }
             }
             return *this;
