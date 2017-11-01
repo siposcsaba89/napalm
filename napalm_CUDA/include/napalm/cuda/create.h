@@ -2,17 +2,8 @@
 #include <napalm/cuda/napalm_CUDA_export.h>
 #include <napalm/napalm.h>
 extern "C" {
-    NAPALM_CUDA_EXPORT napalm::Context * createContext(int32_t platform_id, int32_t device_id, int32_t stream_count);
+    NAPALM_CUDA_EXPORT napalm::Context * createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count);
 
-    NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfo();
-    NAPALM_CUDA_EXPORT void destroyPlatformAndDeviceInfo(napalm::PlatformAndDeviceInfo* dev_info);
+    NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoCUDA();
+    NAPALM_CUDA_EXPORT void destroyPlatformAndDeviceInfoCUDA(napalm::PlatformAndDeviceInfo* dev_info);
 }
-namespace napalm {
-    namespace cuda {
-        NAPALM_CUDA_EXPORT PlatformAndDeviceInfo * getPlatformAndDeviceInfoCUDA();
-        NAPALM_CUDA_EXPORT napalm::Context * createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count);
-  }
-}
-
-
-

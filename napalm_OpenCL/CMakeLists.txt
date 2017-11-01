@@ -6,6 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
 find_package(OpenCL REQUIRED)
+add_library(::opencl SHARED IMPORTED)
+set_property(TARGET ::opencl PROPERTY IMPORTED_IMPLIB_RELEASE ${OpenCL_LIBRARY})
+set_property(TARGET ::opencl PROPERTY IMPORTED_LOCATION_RELEASE ${OpenCL_LIBRARY})
+set_property(TARGET ::opencl PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_property(TARGET ::opencl PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    $<INSTALL_INTERFACE:${OpenCL_INCLUDE_DIR}>  # <prefix>/include/mylib
+    $<BUILD_INTERFACE:${OpenCL_INCLUDE_DIR}>  # <prefix>/include/mylib
+)
 
 
 set(PUBLIC_HDRS
@@ -27,7 +35,7 @@ set(SRCS
     
 )
 
-add_library(napalm_OpenCL SHARED ${PUBLIC_HDRS} ${SRCS})
+add_library(napalm_OpenCL ${PUBLIC_HDRS} ${SRCS})
 add_library(::napalm_OpenCL ALIAS napalm_OpenCL)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
@@ -36,8 +44,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 
 source_group(napalm_OpenCL FILES ${PUBLIC_HDRS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCL_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCL_INCLUDE_DIRS})
+if (BUILD_SHARED_LIBS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ::opencl)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC ::opencl)
+endif()
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/napalm/opencl/${PROJECT_NAME}_export.h)

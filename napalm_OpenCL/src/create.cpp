@@ -2,12 +2,12 @@
 #include <napalm/opencl/opencl_context.h>
 #include "cl_utils.h"
 
-NAPALM_OPENCL_EXPORT napalm::Context * createContext(int32_t platform_id, int32_t device_id, int32_t stream_count)
+NAPALM_OPENCL_EXPORT napalm::Context * createContextOpenCL(int32_t platform_id, int32_t device_id, int32_t stream_count)
 {
     return new napalm::cl::OpenCLContext(platform_id, device_id, stream_count);
 }
 
-NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfo()
+NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoOpenCL()
 {
     napalm::PlatformAndDeviceInfo * ret2 = new napalm::PlatformAndDeviceInfo();
     napalm::PlatformAndDeviceInfo & ret = *ret2;
@@ -51,17 +51,7 @@ NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfo()
     return ret2;
 }
 
-NAPALM_OPENCL_EXPORT void destroyPlatformAndDeviceInfo(napalm::PlatformAndDeviceInfo * dev_info)
+NAPALM_OPENCL_EXPORT void destroyPlatformAndDeviceInfoOpenCL(napalm::PlatformAndDeviceInfo * dev_info)
 {
     return delete dev_info;
-}
-
-NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * napalm::cl::getPlatformAndDeviceInfoOpenCL()
-{
-    return ::getPlatformAndDeviceInfo();
-}
-
-NAPALM_OPENCL_EXPORT napalm::Context * napalm::cl::createContextOpenCL(int32_t platform_id, int32_t device_id, int32_t stream_count)
-{
-    return ::createContext(platform_id, device_id, stream_count);
 }

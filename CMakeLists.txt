@@ -67,12 +67,18 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
     
 )
+
+set(TARGET_LINK_LIBRARIES_TYPE PUBLIC)
+if(BUILD_SHARED_LIB)
+    set(TARGET_LINK_LIBRARIES_TYPE PRIVATE)
+endif()
+
 if (BUILD_TIME_LINK_TO_NAPALM_CUDA AND TARGET ::napalm_CUDA)
-    target_link_libraries(napalm PRIVATE ::napalm_CUDA)
+    target_link_libraries(napalm ${TARGET_LINK_LIBRARIES_TYPE} ::napalm_CUDA)
 	target_compile_definitions(napalm PRIVATE -DBUILD_TIME_LINK_TO_NAPALM_CUDA)
 endif()
 if (BUILD_TIME_LINK_TO_NAPALM_OPENCL AND TARGET ::napalm_OpenCL)
-    target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
+    target_link_libraries(napalm ${TARGET_LINK_LIBRARIES_TYPE} ::napalm_OpenCL)
 	target_compile_definitions(napalm PRIVATE -DBUILD_TIME_LINK_TO_NAPALM_OPENCL)
 endif()
 

@@ -56,7 +56,7 @@ set(SRCS
     
 )
 
-add_library(napalm_CUDA SHARED ${PUBLIC_HDRS} ${SRCS})
+add_library(napalm_CUDA ${PUBLIC_HDRS} ${SRCS})
 add_library(::napalm_CUDA ALIAS napalm_CUDA)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
@@ -65,7 +65,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 
 source_group(napalm_CUDA FILES ${PUBLIC_HDRS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ::cuda) #TODO
+if (BUILD_SHARED_LIBS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ::cuda)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC ::cuda)
+endif()
 
 if (CUDA_RUNTIME_COMPILE)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE -DHAVE_NVRTC)

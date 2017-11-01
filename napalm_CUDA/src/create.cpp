@@ -2,12 +2,12 @@
 #include <napalm/cuda/cuda_context.h>
 #include "cuda_utils.h"
 #include <cuda.h>
-NAPALM_CUDA_EXPORT napalm::Context * createContext(int32_t platform_id, int32_t device_id, int32_t stream_count)
+NAPALM_CUDA_EXPORT napalm::Context * createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count)
 {
     return new napalm::cuda::CUDAContext(platform_id, device_id, stream_count);
 }
 
-NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfo()
+NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoCUDA()
 {
     CUresult res = cuInit(0);
     napalm::cuda::handleError(res, "Cu init");
@@ -54,17 +54,7 @@ NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfo()
     return ret2;
 }
 
-NAPALM_CUDA_EXPORT void destroyPlatformAndDeviceInfo(napalm::PlatformAndDeviceInfo * dev_info)
+NAPALM_CUDA_EXPORT void destroyPlatformAndDeviceInfoCUDA(napalm::PlatformAndDeviceInfo * dev_info)
 {
     return delete dev_info;
-}
-
-NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * napalm::cuda::getPlatformAndDeviceInfoCUDA()
-{
-    return ::getPlatformAndDeviceInfo();
-}
-
-NAPALM_CUDA_EXPORT napalm::Context * napalm::cuda::createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count)
-{
-    return ::createContext(platform_id, device_id, stream_count);
 }

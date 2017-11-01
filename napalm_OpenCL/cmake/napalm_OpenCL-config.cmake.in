@@ -1,3 +1,11 @@
 include(CMakeFindDependencyMacro)
 find_dependency(OpenCL)
+add_library(::opencl SHARED IMPORTED)
+set_property(TARGET ::opencl PROPERTY IMPORTED_IMPLIB_RELEASE ${OpenCL_LIBRARY})
+set_property(TARGET ::opencl PROPERTY IMPORTED_LOCATION_RELEASE ${OpenCL_LIBRARY})
+set_property(TARGET ::opencl PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_property(TARGET ::opencl PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    $<INSTALL_INTERFACE:${OpenCL_INCLUDE_DIR}>  # <prefix>/include/mylib
+    $<BUILD_INTERFACE:${OpenCL_INCLUDE_DIR}>  # <prefix>/include/mylib
+)
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake)

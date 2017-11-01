@@ -27,16 +27,17 @@ namespace napalm
 #if BUILD_TIME_LINK_TO_NAPALM_CUDA
             if (backend == "CUDA" && BUILD_TIME_LINK_TO_NAPALM_CUDA == 1)
             {
-                get_info = napalm::cuda::getPlatformAndDeviceInfoCUDA;
-                create_context = napalm::cuda::createContextCUDA;
+                //get_info = napalm::cuda::getPlatformAndDeviceInfoCUDA;
+                get_info = getPlatformAndDeviceInfoCUDA;
+                create_context = createContextCUDA;
                 return;
             }
 #endif
 #if BUILD_TIME_LINK_TO_NAPALM_OPENCL
             if (backend == "OpenCL" && BUILD_TIME_LINK_TO_NAPALM_OPENCL == 1)
             {
-                get_info = napalm::cl::getPlatformAndDeviceInfoOpenCL;
-                create_context = napalm::cl::createContextOpenCL;
+                get_info = getPlatformAndDeviceInfoOpenCL;
+                create_context = createContextOpenCL;
                 return;
             }
 #endif
@@ -53,7 +54,7 @@ namespace napalm
                     //throw std::runtime_error("could not load the dynamic library ");
                 }
                 // resolve function address here
-                get_info = (get_info_func)GetProcAddress(hGetProcIDDLL, "getPlatformAndDeviceInfo");
+                get_info = (get_info_func)GetProcAddress(hGetProcIDDLL, ("getPlatformAndDeviceInfo" + backend).c_str());
                 if (!get_info) {
                     DWORD a = GetLastError();
                     backend_loaded = false;
@@ -62,7 +63,7 @@ namespace napalm
                 }
 
                 // resolve function address here
-                create_context = (create_context_func)GetProcAddress(hGetProcIDDLL, "createContext");
+                create_context = (create_context_func)GetProcAddress(hGetProcIDDLL, ("createContext" + backend).c_str());
                 if (!create_context) {
                     std::cout << "could not locate the function napalm::cl::createContext" << std::endl;
                     backend_loaded = false;

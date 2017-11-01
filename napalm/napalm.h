@@ -267,7 +267,7 @@ namespace napalm
     protected:
         virtual ~Context() {}
     private:
-        friend void destroyContext(Context * ctx);
+        friend NAPALM_EXPORT void destroyContext(Context * ctx);
         ProgramStore * m_pr_store = nullptr;
     };
 
