@@ -1,7 +1,7 @@
 #include "napalm/cuda/cuda_program.h"
 #include "cuda_utils.h"
 #include <assert.h>
-
+#include <algorithm>
 #ifdef HAVE_NVRTC
 #include <nvrtc.h>
 #define NVRTC_SAFE_CALL(x) \
@@ -15,12 +15,11 @@
     } while(0)
 #endif
 
-
 namespace napalm
 {
     namespace cuda
     {
-        CUDAProgram::CUDAProgram(const CUDAContext * ctx, const ProgramData & data, const char * compiler_options):
+        CUDAProgram::CUDAProgram(const CUDAContext * ctx, const ProgramData & data):
             m_ctx(ctx)
         {
             napalm::ProgramData::DataType dt = data.data_type;
@@ -107,7 +106,7 @@ namespace napalm
         bool CUDAProgram::createProgramWithSourceData(const ProgramData & data)
         {
 #ifdef HAVE_NVRTC
-            compileRuntimeCudaKernel(data.data);
+            compileRuntimeCudaKernel(data);
             CUresult err = CUDA_SUCCESS;
             err = cuModuleLoadData(&m_program, m_program_binary.c_str());
             bool ret = true;
@@ -127,7 +126,11 @@ namespace napalm
             std::string file_data = loadFile(data.data, false);
             if (file_data.empty())
                 return false;
-            compileRuntimeCudaKernel(file_data.c_str());
+            ProgramData bin_data = data;
+            bin_data.data = file_data.c_str();
+            bin_data.data_type = ProgramData::DATA_TYPE_BINARY_DATA;
+            bin_data.data_size = file_data.size();
+            compileRuntimeCudaKernel(bin_data);
             CUresult err = CUDA_SUCCESS;
             err = cuModuleLoadData(&m_program, m_program_binary.c_str());
             bool ret = true;
@@ -176,22 +179,45 @@ namespace napalm
             return ret;
         }
 #ifdef HAVE_NVRTC
-        void CUDAProgram::compileRuntimeCudaKernel(const char * source)
+        void CUDAProgram::compileRuntimeCudaKernel(const ProgramData & data)
         {
             nvrtcProgram prog;
             NVRTC_SAFE_CALL(
                 nvrtcCreateProgram(&prog,         // prog
-                    source,         // buffer
+                    data.data,         // buffer
                     "napalm cuda runtime compile",    // name
                     0,             // numHeaders
                     NULL,          // headers
                     NULL));        // includeNames
                                    // Compile the program for compute_30 with fmad disabled.
                                    //TODO
-            const char *opts[] = { "--gpu-architecture=compute_50" }; //TODO from outside, opencl to and --include-path needs to be set
+            //const char *opts[] = { "--gpu-architecture=compute_50" }; //TODO from outside, opencl to and --include-path needs to be set
+
+            std::vector<std::string> options;
+            if (data.compilation_options != nullptr && data.compilation_options != "")
+                options = split(data.compilation_options, '+');
+
+            std::vector<char*> coptions;
+            coptions.reserve(options.size());
+
+            for (auto & opt : options)
+            {
+                auto it = opt.find("--include-path");
+                auto it2 = opt.find("-I");
+                if (it != std::string::npos || it2 != std::string::npos)
+                {
+                    //opt = ReplaceAll(opt, " ", "\\ ");
+                    opt = replace_all(opt, "\"", "");
+                }
+            }
+
+            for (size_t i = 0; i < options.size(); ++i)
+                coptions.push_back(const_cast<char*>(options[i].c_str()));
+
+            int num_opts = int(options.size()); data.compilation_options == nullptr || data.compilation_options == "" ? 0 : 1;
             nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
-                1,     // numOptions
-                opts); // options
+                num_opts,     // numOptions
+                num_opts > 0 ? &coptions[0] : nullptr); // options
                        // Obtain compilation log from the program.
             size_t logSize;
             NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize));

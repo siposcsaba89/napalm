@@ -6,7 +6,7 @@ namespace napalm
 {
     namespace cl
     {
-        CLProgram::CLProgram(const OpenCLContext * ctx, const ProgramData & data, const char * compiler_options):
+        CLProgram::CLProgram(const OpenCLContext * ctx, const ProgramData & data):
             m_ctx(ctx)
         {
             napalm::ProgramData::DataType dt = data.data_type;
@@ -34,7 +34,7 @@ namespace napalm
                 err = clBuildProgram(m_program,
                     1,
                     &dev_id,
-                    compiler_options,
+                    data.compilation_options,
                     nullptr,
                     nullptr
                 );

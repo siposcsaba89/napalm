@@ -86,9 +86,9 @@ namespace napalm {
             return new CLImg(this, format, size, mem_flag, host_ptr, error);
         }
 
-        Program * OpenCLContext::createProgram(const ProgramData & data, const char * compiler_options) const
+        Program * OpenCLContext::createProgram(const ProgramData & data) const
         {
-            return new CLProgram(this, data, compiler_options);
+            return new CLProgram(this, data);
         }
 
         const char * OpenCLContext::getContextKind() const

@@ -238,27 +238,18 @@ namespace napalm
             DATA_TYPE_BINARY_FILE_NAME = 2,
             DATA_TYPE_SOURCE_FILE_NAME = 3
         };
-        char * data = nullptr;
+        const char * data = nullptr;
         size_t data_size = 0;
         DataType data_type;
         const char * timestamp = "";
+        const char * compilation_options = nullptr;
         ProgramData() {}
-        ProgramData(DataType type, const std::initializer_list<unsigned char> & l, size_t data_size_ = 0, const char * timestamp = "") :
-            data_type(type), data_size(data_size_), timestamp(timestamp) {
-            data_size = l.size();
-            data = new char[data_size];
-            memcpy(data, l.begin(), data_size);
-        }
-        ProgramData(DataType type, const char * d, size_t data_size_ = 0, const char * timestamp = "") :
-            data_type(type), data_size(data_size_), timestamp(timestamp) {
+        ProgramData(DataType type, const char * d, size_t data_size_ = 0, const char * timestamp = "", const char * comp_options = nullptr) :
+            data_type(type), data_size(data_size_), data(d), timestamp(timestamp), compilation_options(comp_options) {
             if (data_size == 0)
                 data_size = strlen(d);
-            data = new char[data_size];
-            memcpy(data, d, data_size);
         }
-        ~ProgramData() { if (data) delete[] data; data = nullptr; }
-        ProgramData(const ProgramData &) = delete;
-        ProgramData& operator =(const ProgramData &) = delete;
+        ~ProgramData() {}
     };
 
     class Context
@@ -268,7 +259,7 @@ namespace napalm
             void * host_ptr = nullptr, int32_t * error = nullptr) const = 0;
         virtual Img * createImg(ImgFormat format, ImgRegion size, MemFlag mem_flag = MEM_FLAG_READ_WRITE,
             void * host_ptr = nullptr, int32_t * error = nullptr) const = 0;
-        virtual Program * createProgram(const ProgramData & data, const char * compiler_options = nullptr) const = 0;
+        virtual Program * createProgram(const ProgramData & data) const = 0;
         virtual const char * getContextKind() const = 0;
         virtual void finish(int32_t command_queue) const = 0;
         void setProgramStore(ProgramStore * store) { m_pr_store = store; }

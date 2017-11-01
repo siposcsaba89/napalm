@@ -12,7 +12,7 @@ namespace napalm
 
             std::map<std::string, std::pair<std::string, ProgramData>> program_data =
             { 
-               @PROGRAM_SOURCE@
+@PROGRAM_SOURCE@
             };
 
             {

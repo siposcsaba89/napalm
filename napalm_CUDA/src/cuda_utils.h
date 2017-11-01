@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <napalm/napalm.h>
+#include <sstream>
 
 namespace napalm
 {
@@ -26,5 +27,18 @@ namespace napalm
         CUarray_format getCUDAImageForamt(ImgFormat format, unsigned int & num_channels, unsigned int & flags, int & bytes_per_channel);
 
         std::string loadFile(const char * fname, bool binary);
+
+        template<typename Out>
+        void split(const std::string &s, char delim, Out result) {
+            std::stringstream ss(s);
+            std::string item;
+            while (std::getline(ss, item, delim)) {
+                *(result++) = item;
+            }
+        }
+
+        std::vector<std::string> split(const std::string &s, char delim);
+        std::string replace_all(std::string str, const std::string& from, const std::string& to);
+
     }
 }

@@ -23,7 +23,7 @@ namespace cuda
 
     struct CUDAProgram : public Program
     {
-        CUDAProgram(const CUDAContext * ctx, const ProgramData & data, const char * compiler_options);
+        CUDAProgram(const CUDAContext * ctx, const ProgramData & data);
         virtual Kernel & getKernel(const char *  kernel_name);
         virtual bool getStatus() const;
         virtual ProgramBinary getBinary();
@@ -34,7 +34,7 @@ namespace cuda
         bool createProgramWithBinaryData(const ProgramData & data);
         bool createProgramWithBinaryFile(const ProgramData & data);
 #ifdef HAVE_NVRTC
-        void compileRuntimeCudaKernel(const char * source);
+        void compileRuntimeCudaKernel(const ProgramData & data);
 #endif
     private:
         const CUDAContext * m_ctx = nullptr;

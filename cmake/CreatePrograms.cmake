@@ -2,6 +2,8 @@
 set(EMBED_FILE_TEMPLATE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "Directory containing template PROGRAM_FILES")
 # TODO extension map to decide which file belongs which API and Binary or Source type, like ".cl:OpenCL:SOURCE;.cu:CUDA:SOURCE;.ptx:CUDA:BINARY"
 function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
+    target_sources(${target} PRIVATE ${PROGRAM_FILES_IN})
+    source_group(compute_programs FILES ${PROGRAM_FILES_IN})
     set(PROGRAM_FILES)
     set(CU_PROGRAM_FILES)
     set(PROGRAM_NAMES)
@@ -28,6 +30,7 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         list(APPEND output napalm/gen/programs/${f}.h napalm/gen/programs/${f}.cpp)
     endforeach()
     
+    list(APPEND CUDA_NVCC_FLAGS "-gencode arch=compute_30,code=sm_30") 
     if (CUDA_FOUND AND ${COMPILE_IN_BUILD_TYPE})
         cuda_compile_ptx(CU_PROGRAM_FILES_PTXS ${CU_PROGRAM_FILES})
         list(APPEND PROGRAM_FILES ${CU_PROGRAM_FILES_PTXS})
@@ -48,11 +51,14 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         set (PROGRAM_RUNTIME_SOURCE_DIR ${ARGV5})
     endif()
 
-    set (PROGRAM_FILES_DESCRIPTORS ".cl:OpenCL:SOURCE" ".cu:CUDA:SOURCE" ".cu.ptx:CUDA:BINARY")
+    set(CU_INCLUDE_PATH "${CUDA_INCLUDE_DIRS}")
+    set (PROGRAM_FILES_DESCRIPTORS ".cl|OpenCL|SOURCE|\"-I \\\"${PROGRAM_RUNTIME_SOURCE_DIR}\\\"\"" 
+        ".cu|CUDA|SOURCE|\"--gpu-architecture=compute_52+--include-path=\\\"${CU_INCLUDE_PATH}\\\"+--include-path=\\\"${PROGRAM_RUNTIME_SOURCE_DIR}\\\"\"" 
+        ".cu.ptx|CUDA|BINARY|\"\"")
     if (DEFINED ARGV6)
         set (PROGRAM_FILES_DESCRIPTORS ${ARGV6})
     endif()
-    
+    message(STATUS "Program file descriptors: ${PROGRAM_FILES_DESCRIPTORS}")
     
     message(STATUS "EMBED_PROGRAM_FILES: ${EMBED_PROGRAM_FILES}")
     message(STATUS "PROGRAM_RUNTIME_SOURCE_DIR: ${PROGRAM_RUNTIME_SOURCE_DIR}")

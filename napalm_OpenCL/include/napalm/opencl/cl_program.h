@@ -21,7 +21,7 @@ namespace cl
 
     struct CLProgram : public Program
     {
-        CLProgram(const OpenCLContext * ctx, const ProgramData & data, const char * compiler_options);
+        CLProgram(const OpenCLContext * ctx, const ProgramData & data);
         virtual Kernel & getKernel(const char *  kernel_name);
         virtual bool getStatus() const;
         virtual ProgramBinary getBinary();

@@ -1,4 +1,6 @@
-
+#include <sm_32_intrinsics.h>
+#include <surface_functions.h>
+#include <sample_inc.h>
 
 extern "C"
 {

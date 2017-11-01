@@ -103,7 +103,7 @@ if (BUILD_EXAMPLES)
 	include(cmake/CreatePrograms.cmake)
 	set (PROGRAMS samples/simple.cl samples/simple.cu)
 	set(EMBED_PROGRAM_FILES TRUE)
-	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE TRUE)
+	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE FALSE)
     set(PROGRAM_RUNTIME_SOURCE_DIR "./alma/korte/")
 	create_programs("${PROGRAMS}"
 		output napalm_simple 

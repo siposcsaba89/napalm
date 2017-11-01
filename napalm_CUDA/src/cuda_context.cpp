@@ -83,9 +83,9 @@ namespace napalm {
             return new CUDAImg(this, format, size, mem_flag, host_ptr, error);
         }
 
-        Program * CUDAContext::createProgram(const ProgramData & data, const char * compiler_options) const
+        Program * CUDAContext::createProgram(const ProgramData & data) const
         {
-            return new CUDAProgram(this, data, compiler_options);
+            return new CUDAProgram(this, data);
         }
 
         const char * CUDAContext::getContextKind() const
