@@ -2,6 +2,7 @@
 #include <napalm/cuda/cuda_context.h>
 #include "cuda_utils.h"
 #include <cuda.h>
+#include <cstring>
 NAPALM_CUDA_EXPORT napalm::Context * createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count)
 {
     return new napalm::cuda::CUDAContext(platform_id, device_id, stream_count);
@@ -45,7 +46,7 @@ NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoCUDA(
                     napalm::cuda::handleError(res, "Get device");
                     res = cuDeviceGetName(&dev_name[0], int(dev_name.size()), dev);
                     ret.device_names[0][j] = new char[dev_name.size()];
-                    strcpy_s(ret.device_names[0][j], dev_name.size(), dev_name.c_str());
+                    std::strcpy(ret.device_names[0][j], dev_name.c_str());
                 }
             }
         }

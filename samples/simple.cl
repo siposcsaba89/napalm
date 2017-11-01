@@ -1,4 +1,4 @@
-#include <sample_inc.h>
+//#include <sample_inc.h>
 
 
 kernel void test_kernel(global unsigned char * src, global unsigned char * dst, int multiplier)

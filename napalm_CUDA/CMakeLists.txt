@@ -15,7 +15,11 @@ find_package(CUDA REQUIRED)
 #set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_50,code=sm_50)
 #list(APPEND CUDA_NVCC_FLAGS "--use_fast_math")
 add_library(::cuda SHARED IMPORTED)
-find_library(CUDA_DRIVER_API NAMES cuda PATHS ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/ NO_DEFAULT_PATH)
+find_library(CUDA_DRIVER_API NAMES cuda PATHS 
+    ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/
+    ${CUDA_TOOLKIT_ROOT_DIR}/lib64/
+    ${CUDA_TOOLKIT_ROOT_DIR}/lib64/stubs/
+    NO_DEFAULT_PATH)
 if (NOT CUDA_DRIVER_API)
     message(FATAL_ERROR "Coud not find cuda driver api library!")
 endif()
@@ -58,8 +62,10 @@ set(SRCS
 
 add_library(napalm_CUDA ${PUBLIC_HDRS} ${SRCS})
 add_library(::napalm_CUDA ALIAS napalm_CUDA)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
-set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+if (BUILD_SHARED_LIBS)
+    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX _d)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 

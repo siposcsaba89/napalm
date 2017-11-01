@@ -2,6 +2,8 @@
 #include <napalm/napalm_export.h>
 #include <inttypes.h>
 #include <iostream>
+#include <cstring>
+#include <string.h>
 #include "program_store.h"
 
 namespace napalm
@@ -12,7 +14,7 @@ namespace napalm
         MAP_MODE_WRITE = 1,
         MAP_MODE_WRITE_INVALIDATE_REGION = 2 /// The contents of the region being mapped are to be discarded. This is typically the case when the region being mapped is overwritten by the host
     };
-    
+
     enum MemFlag
     {
         MEM_FLAG_READ_WRITE = 0,
@@ -307,12 +309,12 @@ namespace napalm
                 device_names[i] = new char *[num_devices[i]];
                 size_t platform_name_l = strlen(other.platforms[i]) + 1;
                 platforms[i] = new char[platform_name_l];
-                strcpy_s(platforms[i], platform_name_l, other.platforms[i]);
+                std::strcpy(platforms[i], other.platforms[i]);
                 for (int j = 0; j < num_devices[i]; ++j)
                 {
                     size_t dev_name_size = strlen(other.device_names[i][j]) + 1;
                     device_names[i][j] = new char[dev_name_size];
-                    strcpy_s(device_names[i][j], dev_name_size, other.device_names[i][j]);
+                    std::strcpy(device_names[i][j], other.device_names[i][j]);
                 }
             }
             return *this;

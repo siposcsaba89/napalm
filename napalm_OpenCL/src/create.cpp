@@ -1,6 +1,7 @@
 #include <napalm/opencl/create.h>
 #include <napalm/opencl/opencl_context.h>
 #include "cl_utils.h"
+#include <cstring>
 
 NAPALM_OPENCL_EXPORT napalm::Context * createContextOpenCL(int32_t platform_id, int32_t device_id, int32_t stream_count)
 {
@@ -29,7 +30,7 @@ NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoOpe
                 napalm::cl::getPlatformInfo(platform_ids, int(i), CL_PLATFORM_VENDOR).c_str() + std::string(" Version:") +
                 napalm::cl::getPlatformInfo(platform_ids, int(i), CL_PLATFORM_VERSION);
             ret.platforms[i] = new char[platform_name.size()];
-            strcpy_s(ret.platforms[i], platform_name.size(), platform_name.c_str());
+            std::strcpy(ret.platforms[i], platform_name.c_str());
             cl_uint num_devices;
             clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_ALL, 0, nullptr, &num_devices);
             ret.num_devices[i] = int32_t(num_devices);
@@ -42,7 +43,7 @@ NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoOpe
                 {
                     std::string dev_name = napalm::cl::getDevInfo(devices, int(j), CL_DEVICE_NAME);
                     ret.device_names[i][j] = new char[dev_name.size()];
-                    strcpy_s(ret.device_names[i][j], dev_name.size(), dev_name.c_str());
+                    std::strcpy(ret.device_names[i][j], dev_name.c_str());
                 }
             }
         }

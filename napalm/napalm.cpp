@@ -2,6 +2,8 @@
 #include <string>
 #ifdef WIN32
 #include <Windows.h>
+#else
+#include <dlfcn.h>
 #endif
 
 #ifdef BUILD_TIME_LINK_TO_NAPALM_CUDA
@@ -70,7 +72,29 @@ namespace napalm
                     backend_loaded = false;
                 }
 #else
-#error ass
+                std::string dll_name = (std::string("libnapalm_") + backend + debug_ext + ".so");
+                m_so = dlopen(dll_name.c_str(), RTLD_NOW);
+                if (!m_so) 
+                {
+                    std::cout << "could not load the dynamic library " << dll_name << std::endl;
+                    backend_loaded = false;
+                }
+                if (backend_loaded)
+                {
+                    char *error;
+                    get_info = (get_info_func)dlsym(m_so, ("getPlatformAndDeviceInfo" + backend).c_str());
+                    if ((error = dlerror()) != NULL)
+                    {
+                        std::cout << "could not locate the function getPlatformAndDeviceInfo: " << error << std::endl;
+                        backend_loaded = false;
+                    }
+                    create_context = (create_context_func)dlsym(m_so, ("createContext" + backend).c_str());
+                    if ((error = dlerror()) != NULL)
+                    {
+                        std::cout << "could not locate the function creteContext: " << error << std::endl;
+                        backend_loaded = false;
+                    }
+                }
 #endif
             }
         }
@@ -78,7 +102,9 @@ namespace napalm
         ~BackendLoader() 
         { 
 #if WIN32
-            if (hGetProcIDDLL != nullptr) FreeLibrary(hGetProcIDDLL); 
+            if (hGetProcIDDLL != nullptr) FreeLibrary(hGetProcIDDLL);
+#else
+            if (m_so != nullptr) dlclose(m_so);
 #endif
         }
     public:
@@ -101,6 +127,8 @@ namespace napalm
         bool backend_loaded = true;
 #if WIN32
         HINSTANCE hGetProcIDDLL = nullptr;
+#else
+        void * m_so = nullptr;
 #endif
     };
 
@@ -152,7 +180,7 @@ namespace napalm
         return loader.isLoaded();
     }
 
-    NAPALM_EXPORT PlatformAndDeviceInfo * napalm::getPlatformAndDeviceInfo(const char * api_type)
+    NAPALM_EXPORT PlatformAndDeviceInfo * getPlatformAndDeviceInfo(const char * api_type)
     {
         auto backend = BackendManager::getManager().getLoader(api_type);
         if (backend)
@@ -161,7 +189,7 @@ namespace napalm
             return nullptr;
     }
 
-    Context* napalm::createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count)
+    NAPALM_EXPORT Context* createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count)
     {
         auto backend = BackendManager::getManager().getLoader(api_type);
         if (backend)
@@ -170,7 +198,7 @@ namespace napalm
             return nullptr;
     }
 
-    NAPALM_EXPORT void napalm::destroyContext(Context * ctx)
+    NAPALM_EXPORT void destroyContext(Context * ctx)
     {
         if (ctx->getProgramStore())
             delete ctx->getProgramStore();

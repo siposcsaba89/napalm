@@ -11,10 +11,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-
-
 option(BUILD_TIME_LINK_TO_NAPALM_CUDA "Link to napalm_CUDA in build time" FALSE)
 option(BUILD_TIME_LINK_TO_NAPALM_OPENCL "Link to napalm_OpenCL in build time" FALSE)
 
@@ -37,16 +33,19 @@ set(SRCS
 
 add_library(${PROJECT_NAME} ${SRCS} ${PUBLIC_HEADERS})
 add_library(::${PROJECT_NAME} ALIAS napalm)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
-set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+if (BUILD_SHARED_LIBS)
+    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX _d)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
+
 
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/${PROJECT_NAME}/${PROJECT_NAME}_export.h)
 
-find_package(OpenCL QUIET)
+find_package(OpenCL REQUIRED)
 if (OpenCL_FOUND)
     message(STATUS "Building with OpenCL, ${OpenCL_LIBRARIES}")
     add_subdirectory(napalm_OpenCL)
@@ -60,12 +59,11 @@ endif(CUDA_FOUND)
 
 
 
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
     PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>
-        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
-    
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}> 
 )
 
 set(TARGET_LINK_LIBRARIES_TYPE PUBLIC)
@@ -82,7 +80,9 @@ if (BUILD_TIME_LINK_TO_NAPALM_OPENCL AND TARGET ::napalm_OpenCL)
 	target_compile_definitions(napalm PRIVATE -DBUILD_TIME_LINK_TO_NAPALM_OPENCL)
 endif()
 
-#target_link_libraries(napalm PRIVATE ::napalm_OpenCL)
+if (UNIX)
+    target_link_libraries(napalm PRIVATE dl)
+endif (UNIX)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
