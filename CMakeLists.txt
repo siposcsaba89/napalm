@@ -12,8 +12,13 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
-option(BUILD_TIME_LINK_TO_NAPALM_CUDA "Link to napalm_CUDA in build time" FALSE)
-option(BUILD_TIME_LINK_TO_NAPALM_OPENCL "Link to napalm_OpenCL in build time" FALSE)
+option(BUILD_TIME_LINK_TO_NAPALM_CUDA "Link to napalm_CUDA in build time" OFF)
+option(BUILD_TIME_LINK_TO_NAPALM_OPENCL "Link to napalm_OpenCL in build time" OFF)
+
+if (NOT BUILD_SHARED_LIBS)
+    set(BUILD_TIME_LINK_TO_NAPALM_CUDA ON CACHE BOOL "" FORCE)
+    set(BUILD_TIME_LINK_TO_NAPALM_OPENCL ON CACHE BOOL "" FORCE)
+endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS On) 
 
