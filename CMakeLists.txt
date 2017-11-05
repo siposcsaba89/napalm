@@ -46,6 +46,9 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX _d)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+endif()
 
 
 include(GenerateExportHeader)
@@ -125,7 +128,7 @@ if (BUILD_EXAMPLES)
     add_executable(napalm_simple samples/simple.cpp)
 	include(cmake/CreatePrograms.cmake)
 	set (PROGRAMS samples/simple.cl samples/simple.cu)
-	set(EMBED_PROGRAM_FILES TRUE)
+	set(EMBED_PROGRAM_FILES FALSE)
 	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE FALSE)
     set(PROGRAM_RUNTIME_SOURCE_DIR "./alma/korte/")
 	create_programs("${PROGRAMS}"

@@ -5,8 +5,8 @@
 int main()
 {
 
-    //std::string platforms[] = { "CUDA", "OpenCL" };
-    std::string platforms[] = { "OpenCL" };
+    std::string platforms[] = { "CUDA", "OpenCL" };
+    //std::string platforms[] = { "OpenCL" };
 
     for (auto & pl : platforms)
     {

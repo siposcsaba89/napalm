@@ -4,7 +4,7 @@ set(PROGRAM_FILES @PROGRAM_FILES@)
 set(PROGRAM_NAMES @PROGRAM_NAMES@)
 #set(PROGRAM_FILES_DESCRIPTORS "@PROGRAM_FILES_DESCRIPTORS@")
 set(PROGRAM_FILES_DESCRIPTORS [==[@PROGRAM_FILES_DESCRIPTORS@]==])
-
+set(CMAKE_BINARY_DIR @CMAKE_BINARY_DIR@)
 set(target @target@)
 
 
@@ -84,8 +84,9 @@ foreach(pn ${PROGRAM_NAMES})
 
             # Append data to output file
         else()
+            file(COPY ${f} DESTINATION ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR})
             get_filename_component(FILENAME ${f} NAME)
-            set(FILEDATA "${PROGRAM_RUNTIME_SOURCE_DIR}/${FILENAME}")
+            set(FILEDATA "\"${PROGRAM_RUNTIME_SOURCE_DIR}/${FILENAME}\"")
         endif()
         message(STATUS "Program file ${f} added: ${TS}")
         string(CONCAT PROGRAM_DATA "${PROGRAM_DATA}" "            std::string ${pn}_data_${TARGET_API} = {${FILEDATA}};" "\n")

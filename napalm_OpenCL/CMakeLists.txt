@@ -43,6 +43,9 @@ if (BUILD_SHARED_LIBS)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX _d)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+endif()
 
 source_group(napalm_OpenCL FILES ${PUBLIC_HDRS})
 

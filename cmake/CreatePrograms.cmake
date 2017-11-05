@@ -2,6 +2,18 @@
 set(EMBED_FILE_TEMPLATE_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "Directory containing template PROGRAM_FILES")
 # TODO extension map to decide which file belongs which API and Binary or Source type, like ".cl:OpenCL:SOURCE;.cu:CUDA:SOURCE;.ptx:CUDA:BINARY"
 function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
+
+    set (EMBED_PROGRAM_FILES TRUE)
+    #message(FATAL_ERROR ${ARGV4})
+    if (DEFINED ARGV4)
+        set (EMBED_PROGRAM_FILES ${ARGV4})
+    endif()
+    set (PROGRAM_RUNTIME_SOURCE_DIR "./")
+    if (DEFINED ARGV5)
+        set (PROGRAM_RUNTIME_SOURCE_DIR ${ARGV5})
+    endif()
+
+
     target_sources(${target} PRIVATE ${PROGRAM_FILES_IN})
     source_group(compute_programs FILES ${PROGRAM_FILES_IN})
     set(PROGRAM_FILES)
@@ -14,6 +26,7 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         endif()
         get_filename_component(filename ${f} NAME)
         get_filename_component(filename_we ${f} NAME_WE)
+        
         list(APPEND PROGRAM_NAMES ${filename_we})
         get_filename_component(f_ext ${filename} EXT)
         if (${f_ext} STREQUAL ".cu")
@@ -22,6 +35,17 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         else ()
             list(APPEND PROGRAM_FILES ${f})
         endif()
+        
+        if (NOT EMBED_PROGRAM_FILES)
+            if ((${f_ext} STREQUAL ".cu" AND NOT ${COMPILE_IN_BUILD_TYPE}) OR NOT (${f_ext} STREQUAL ".cu"))
+                add_custom_command(
+                    OUTPUT ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}
+                    COMMAND ${CMAKE_COMMAND} -E copy ${f} ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}
+                    MAIN_DEPENDENCY ${f})
+            endif()
+        endif()
+
+        
     endforeach()
 
     set(output)
@@ -30,7 +54,9 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         list(APPEND output napalm/gen/programs/${f}.h napalm/gen/programs/${f}.cpp)
     endforeach()
     
-    list(APPEND CUDA_NVCC_FLAGS "-gencode arch=compute_30,code=sm_30") 
+    list(APPEND CUDA_NVCC_FLAGS "-gencode arch=compute_50,code=sm_50 --include-path=${CMAKE_CURRENT_SOURCE_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}") 
+    message(STATUS "CUDA NVCC FLAGS" ${CUDA_NVCC_FLAGS})
+    set(CUDA_GENERATED_OUTPUT_DIR ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR})
     if (CUDA_FOUND AND ${COMPILE_IN_BUILD_TYPE})
         cuda_compile_ptx(CU_PROGRAM_FILES_PTXS ${CU_PROGRAM_FILES})
         list(APPEND PROGRAM_FILES ${CU_PROGRAM_FILES_PTXS})
@@ -41,16 +67,6 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
     set(program_template_h ${EMBED_FILE_TEMPLATE_DIR}/program_template.h.in)
     set(program_template_cpp ${EMBED_FILE_TEMPLATE_DIR}/program_template.cpp.in)
     
-    set (EMBED_PROGRAM_FILES TRUE)
-    #message(FATAL_ERROR ${ARGV4})
-    if (DEFINED ARGV4)
-        set (EMBED_PROGRAM_FILES ${ARGV4})
-    endif()
-    set (PROGRAM_RUNTIME_SOURCE_DIR "./")
-    if (DEFINED ARGV5)
-        set (PROGRAM_RUNTIME_SOURCE_DIR ${ARGV5})
-    endif()
-
     set(CU_INCLUDE_PATH "${CUDA_INCLUDE_DIRS}")
     set (PROGRAM_FILES_DESCRIPTORS ".cl|OpenCL|SOURCE|\"-I \\\"${PROGRAM_RUNTIME_SOURCE_DIR}\\\"\"" 
         ".cu|CUDA|SOURCE|\"--gpu-architecture=compute_52+--include-path=\\\"${CU_INCLUDE_PATH}\\\"+--include-path=\\\"${PROGRAM_RUNTIME_SOURCE_DIR}\\\"\"" 
@@ -75,9 +91,15 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
     set_source_files_properties(${output} PROPERTIES GENERATED TRUE)
     source_group(napalm\\gen\\programs FILES ${output})
     
-    add_custom_command(OUTPUT  ${output}
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake
-        DEPENDS ${PROGRAM_FILES} ${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake)
+    if (EMBED_PROGRAM_FILES)
+        add_custom_command(OUTPUT  ${output}
+            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake
+            DEPENDS ${PROGRAM_FILES} ${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake)
+    else()
+        add_custom_command(OUTPUT  ${output}
+            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generate_file_${target}.cmake)
+    endif()
         
         
     message(STATUS "PROGRAMS TO ADD: ${PROGRAM_FILES}")

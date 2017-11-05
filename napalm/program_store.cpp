@@ -1,8 +1,44 @@
 #include "program_store.h"
 #include <fstream>
 #include "napalm.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifndef WIN32
+#include <unistd.h>
+#endif
+#include <time.h>
+#ifdef WIN32
+#define stat _stat
+#endif
 
 namespace napalm {
+
+    char* formatdate(char* str, time_t val)
+    {
+#if WIN32
+        tm loc_time;
+        errno_t err = localtime_s(&loc_time,&val);
+        strftime(str, 36, "%Y-%m-%dT%H:%M:%SZ", &loc_time);
+#else
+        strftime(str, 36, "%Y-%m-%dT%H:%M:%SZ", localtime(&val));
+#endif
+        return str;
+    }
+
+
+    std::string getFileLastModificationDate(const std::string & f_name)
+    {
+        std::string ret;
+        struct stat result;
+        if (stat(f_name.c_str(), &result) == 0)
+        {
+            auto mod_time = result.st_mtime;
+            char date[36];
+            ret = formatdate(date, result.st_mtime);
+        }
+        return ret;
+    }
+
 
     ProgramStore::ProgramStore(Context * dev_ctx) : m_dev_ctx(dev_ctx)
     {
@@ -49,18 +85,23 @@ namespace napalm {
         ProgramData * binary = nullptr;
         if (it == m_program_map.end())
         {
+            std::string last_modified = data.timestamp;
+
+            if (data.data_type == ProgramData::DATA_TYPE_SOURCE_FILE_NAME)
+                last_modified = getFileLastModificationDate(data.data);
+
             if (data.data_type == ProgramData::DATA_TYPE_SOURCE_DATA || data.data_type == ProgramData::DATA_TYPE_SOURCE_FILE_NAME)
             {
                 //load binary and check timestamp
-                std::ifstream ts_file(name + ".bints");
+                std::ifstream ts_file(name + "_" + m_dev_ctx->getContextKind() + ".bints");
                 std::string stored_ts;
                 if (ts_file.is_open())
                 {
                     ts_file >> stored_ts;
-                    if (stored_ts == data.timestamp)
+                    if (stored_ts == last_modified)
                     {
                         //load binary file and create programData
-                        std::ifstream binpr(name + ".binpr", std::ios::binary);
+                        std::ifstream binpr(name + "_" + m_dev_ctx->getContextKind() + ".binpr", std::ios::binary);
                         if (binpr.is_open())
                         {
                             std::string pr_binary((std::istreambuf_iterator<char>(binpr)),
@@ -100,10 +141,10 @@ namespace napalm {
                 if (m_program_cache_enabled && (pr_data_to_build->data_type == ProgramData::DATA_TYPE_SOURCE_DATA ||
                     pr_data_to_build->data_type == ProgramData::DATA_TYPE_SOURCE_FILE_NAME))
                 {
-                    std::ofstream bints(name + ".bints");
-                    bints << data.timestamp;
+                    std::ofstream bints(name + "_" + m_dev_ctx->getContextKind() + ".bints");
+                    bints << last_modified;
                     ProgramBinary pb = prog->getBinary();
-                    std::ofstream program_binary(name + ".binpr", std::ios::binary);
+                    std::ofstream program_binary(name + "_" + m_dev_ctx->getContextKind() + ".binpr", std::ios::binary);
                     program_binary.write(pb.data, pb.binary_size);
                 }
             }
