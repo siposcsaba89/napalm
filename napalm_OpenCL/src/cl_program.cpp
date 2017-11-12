@@ -193,6 +193,7 @@ namespace napalm
 
             cl_int err = clEnqueueNDRangeKernel(m_ctx->getCQ(command_queue), m_kernel, 3, global_w_offset,
                 global_w_size, local_w_size, 0, nullptr, nullptr);
+
         }
         CLKernel::~CLKernel()
         {

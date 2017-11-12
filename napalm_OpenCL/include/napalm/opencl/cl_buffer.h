@@ -13,10 +13,10 @@ namespace napalm {
             virtual void * map(MapMode mode, bool block_queue, int32_t command_queue);
             virtual void * map(MapMode mode, size_t offset, size_t size, bool block_queue, int32_t command_queue);
             virtual void unmap(int32_t command_queue);
-			virtual ArgumentPropereties getARgumentPropereties();
+			virtual ArgumentPropereties getARgumentPropereties() const override;
             virtual ~CLBuffer();
         private:
-            cl_mem m_buffer;
+            mutable cl_mem m_buffer;
             const OpenCLContext * m_ctx;
             void * m_map_address = nullptr;
         };

@@ -1,7 +1,7 @@
 #include <napalm/cuda/cuda_buffer.h>
 #include "cuda_utils.h"
 #include "../include/napalm/cuda/cuda_img.h"
-
+#include <cassert>
 
 namespace napalm
 {
@@ -10,6 +10,7 @@ namespace napalm
         CUDAImg::CUDAImg(const CUDAContext * ctx, ImgFormat format, ImgRegion size, 
             MemFlag mem_flag, void * host_ptr, int32_t * error): m_ctx(ctx)
         {
+            this->mem_flag = mem_flag;
             CUresult res = CUDA_SUCCESS;
             int num_channels = 0;
             int byte_per_channels = 0;
@@ -59,7 +60,7 @@ namespace napalm
             res = cuSurfObjectCreate(&m_surface, &m_r_desc);
             handleError(res, "Cuda Surface create!");
 
-            if (host_ptr)
+            if (host_ptr && (mem_flag & MEM_FLAG_COPY_HOST_PTR))
                 write(host_ptr, true, 0);
             handleError(res, "CUDA Create image!");
         }
@@ -163,11 +164,13 @@ namespace napalm
 
         void * CUDAImg::map(MapMode mode, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue)
         {
+            assert(false && "Napalm cuda not support image mapping!");
             return nullptr;
         }
 
         void CUDAImg::unmap(int32_t command_queue)
         {
+            assert(false && "Napalm cuda not support image mapping!");
         }
 
         ArgumentPropereties CUDAImg::getARgumentPropereties() const

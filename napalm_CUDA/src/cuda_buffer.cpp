@@ -12,14 +12,17 @@ namespace napalm
         {
             buff_size = size;
             CUresult res;
-            if (flag == MEM_FLAG_ALLOC_HOST_PTR)
+            if (flag & MEM_FLAG_ALLOC_HOST_PTR)
                 res = cuMemAllocManaged(&m_buffer, size, CU_MEM_ATTACH_GLOBAL);
             else
                 res = cuMemAlloc(&m_buffer, size);
+            if (host_ptr != nullptr && (flag & MEM_FLAG_COPY_HOST_PTR))
+                write(host_ptr, true, 0);
             handleError(res, "CUDA Buffer creating!");
             m_map_address = (void*)m_buffer;
             if (err != nullptr)
                 *err = int32_t(res);
+            mem_flag = flag;
         }
 
         void CUDABuffer::write(const void * data, bool block_queue, int32_t command_queue)
@@ -59,14 +62,23 @@ namespace napalm
 
         void * CUDABuffer::map(MapMode mode, size_t offset, size_t size, bool block_queue, int32_t command_queue)
         {
+            if ((mem_flag & MEM_FLAG_ALLOC_HOST_PTR) == 0)
+            {
+                handleError(CUDA_ERROR_ASSERT, "Buffer was created without MEM_FLAG_ALLOC_HOST_PTR");
+            }
+
             return m_map_address;
         }
 
         void CUDABuffer::unmap(int32_t command_queue)
         {
+            if ((mem_flag & MEM_FLAG_ALLOC_HOST_PTR) == 0)
+            {
+                handleError(CUDA_ERROR_ASSERT, "Buffer was created without MEM_FLAG_ALLOC_HOST_PTR");
+            }
         }
 
-        ArgumentPropereties CUDABuffer::getARgumentPropereties()
+        ArgumentPropereties CUDABuffer::getARgumentPropereties() const
         {
             return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
         }

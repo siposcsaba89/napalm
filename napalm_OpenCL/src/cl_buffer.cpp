@@ -16,6 +16,7 @@ namespace napalm
             handleError(err_, "Buffer creating!");
             if (err != nullptr)
                 *err = int32_t(err_);
+            mem_flag = flag;
         }
 
         void CLBuffer::write(const void * data, bool block_queue, int32_t command_queue)
@@ -51,6 +52,10 @@ namespace napalm
 
         void * CLBuffer::map(MapMode mode, size_t offset, size_t size, bool block_queue, int32_t command_queue)
         {
+            if ((mem_flag & MEM_FLAG_ALLOC_HOST_PTR) == 0)
+            {
+                handleError(-111, "Buffer was created without MEM_FLAG_ALLOC_HOST_PTR");
+            }
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = 0;
             m_map_address = clEnqueueMapBuffer(m_ctx->getCQ(command_queue), m_buffer, block_queue, 
@@ -61,13 +66,17 @@ namespace napalm
 
         void CLBuffer::unmap(int32_t command_queue)
         {
+            if ((mem_flag & MEM_FLAG_ALLOC_HOST_PTR) == 0)
+            {
+                handleError(-111, "Buffer was created without MEM_FLAG_ALLOC_HOST_PTR");
+            }
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = 0;
             err = clEnqueueUnmapMemObject(m_ctx->getCQ(command_queue), m_buffer, m_map_address, 0, nullptr, nullptr);
             handleError(err, "OpenCL Unmap buffer!");
         }
 
-        ArgumentPropereties CLBuffer::getARgumentPropereties()
+        ArgumentPropereties CLBuffer::getARgumentPropereties() const
         {
             return ArgumentPropereties(&m_buffer, sizeof(m_buffer));
         }

@@ -36,6 +36,7 @@ set(SRCS
     napalm/program_store.cpp
 )
 
+include(cmake/CreatePrograms.cmake)
 
 add_library(${PROJECT_NAME} ${SRCS} ${PUBLIC_HEADERS})
 add_library(::${PROJECT_NAME} ALIAS napalm)
@@ -126,7 +127,6 @@ if (BUILD_EXAMPLES)
     #file (GLOB SRCS samples/simple.cpp)
     #find_package(OpenCV REQUIRED)
     add_executable(napalm_simple samples/simple.cpp)
-	include(cmake/CreatePrograms.cmake)
 	set (PROGRAMS samples/simple.cl samples/simple.cu)
 	set(EMBED_PROGRAM_FILES FALSE)
 	set(COMPILE_IN_BUILD_TYPE_IF_POSSIBLE FALSE)

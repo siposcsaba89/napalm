@@ -37,31 +37,20 @@ void napalm::cl::handleError(cl_int err, const std::string & msg)
 
 int32_t napalm::cl::getCLMemFlag(MemFlag mem_flag)
 {
-    int32_t ret = -1;
-    switch (mem_flag)
-    {
-    case napalm::MEM_FLAG_READ_WRITE:
-        ret = CL_MEM_READ_WRITE;
-        break;
-    case napalm::MEM_FLAG_WITE_ONLY:
-        ret = CL_MEM_WRITE_ONLY;
-        break;
-    case napalm::MEM_FLAG_READ_ONLY:
-        ret = CL_MEM_READ_ONLY;
-        break;
-    case napalm::MEM_FLAG_USE_HOST_PTR:
-        ret = CL_MEM_USE_HOST_PTR;
-        break;
-    case napalm::MEM_FLAG_ALLOC_HOST_PTR:
-        ret = CL_MEM_ALLOC_HOST_PTR;
-        break;
-    case napalm::MEM_FLAG_COPY_HOST_PTR:
-        ret = CL_MEM_COPY_HOST_PTR;
-        break;
-    default:
-        assert(false && "Unknown OpenCL MemFlag!");
-        break;
-    }
+    int32_t ret = 0;
+    if(napalm::MEM_FLAG_READ_WRITE & mem_flag)
+        ret = ret | CL_MEM_READ_WRITE;
+    if(napalm::MEM_FLAG_WITE_ONLY & mem_flag)
+        ret = ret | CL_MEM_WRITE_ONLY;
+    if (napalm::MEM_FLAG_READ_ONLY & mem_flag)
+        ret = ret | CL_MEM_READ_ONLY;
+    if (napalm::MEM_FLAG_USE_HOST_PTR & mem_flag)
+        ret = ret | CL_MEM_USE_HOST_PTR;
+    if (napalm::MEM_FLAG_ALLOC_HOST_PTR & mem_flag)
+        ret = ret | CL_MEM_ALLOC_HOST_PTR;
+    if (napalm::MEM_FLAG_COPY_HOST_PTR & mem_flag)
+        ret = ret | CL_MEM_COPY_HOST_PTR;
+
     return ret;
 }
 

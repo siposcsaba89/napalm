@@ -20,6 +20,7 @@ namespace napalm
             if (error != nullptr)
                 *error = int(err);
             handleError(err, "OpenCL Create image!");
+            this->mem_flag = mem_flag;
         }
 
         void CLImg::write(const void * data, bool block_queue, int32_t command_queue)
@@ -81,6 +82,10 @@ namespace napalm
 
         void * CLImg::map(MapMode mode, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue)
         {
+            if ((mem_flag & MEM_FLAG_ALLOC_HOST_PTR) == 0)
+            {
+                handleError(-111, "Buffer was created without MEM_FLAG_ALLOC_HOST_PTR");
+            }
             size_t img_origin[] =
             {
                 size_t(origin.x),
@@ -106,6 +111,10 @@ namespace napalm
 
         void CLImg::unmap(int32_t command_queue)
         {
+            if ((mem_flag & MEM_FLAG_ALLOC_HOST_PTR) == 0)
+            {
+                handleError(-111, "Buffer was created without MEM_FLAG_ALLOC_HOST_PTR");
+            }
             cl_int err = clEnqueueUnmapMemObject(m_ctx->getCQ(command_queue), m_buffer, m_map_address, 0, 0, 0);
             handleError(err, "OpenCL unmap Image");
         }

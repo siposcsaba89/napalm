@@ -17,17 +17,27 @@ namespace napalm
 
     enum MemFlag
     {
-        MEM_FLAG_READ_WRITE = 0,
-        MEM_FLAG_WITE_ONLY = 1,
-        MEM_FLAG_READ_ONLY = 2,
-        MEM_FLAG_USE_HOST_PTR = 3,
-        MEM_FLAG_ALLOC_HOST_PTR = 4,
-        MEM_FLAG_COPY_HOST_PTR = 5,
-        MEM_FLAG_HOST_WRITE_ONLY = 6,
-        MEM_FLAG_HOST_READ_ONLY = 7,
-        MEM_FLAG_HOST_NO_ACCESS = 8,
+        MEM_FLAG_READ_WRITE = 1 << 0,
+        MEM_FLAG_WITE_ONLY = 1 << 1,
+        MEM_FLAG_READ_ONLY = 1 << 2,
+        MEM_FLAG_USE_HOST_PTR = 1 << 3, // maybe needs to be removed, in cuda not trivial
+        MEM_FLAG_ALLOC_HOST_PTR = 1 << 4,
+        MEM_FLAG_COPY_HOST_PTR = 1 << 5,
+        MEM_FLAG_HOST_WRITE_ONLY = 1 << 6,
+        MEM_FLAG_HOST_READ_ONLY = 1 << 7,
+        MEM_FLAG_HOST_NO_ACCESS = 1 << 8,
 
     };
+
+    inline const MemFlag operator|(MemFlag a, MemFlag b)
+    {
+        return static_cast<MemFlag>(static_cast<int>(a) | static_cast<int>(b));
+    }
+
+    inline const MemFlag operator&(MemFlag a, MemFlag b)
+    {
+        return static_cast<MemFlag>(static_cast<int>(a) & static_cast<int>(b));
+    }
 
     enum DataType
     {
@@ -81,10 +91,11 @@ namespace napalm
         virtual void * map(MapMode mode = MAP_MODE_READ, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void * map(MapMode mode, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
-        virtual ArgumentPropereties getARgumentPropereties() = 0;
+        virtual ArgumentPropereties getARgumentPropereties() const = 0;
         virtual ~Buffer() {}
     public:
         size_t buff_size;
+        MemFlag mem_flag;
     };
 
     struct ImgRegion
@@ -112,6 +123,7 @@ namespace napalm
         virtual ~Img() {}
     public:
         ImgRegion img_size;
+        MemFlag mem_flag;
     };
 
 
@@ -177,6 +189,23 @@ namespace napalm
             fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
         }
 
+        template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Buffer & arg, Types&&... Fargs)
+        {
+            auto prop = arg.getARgumentPropereties();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg;
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
+        template <typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Buffer * arg, Types&&... Fargs)
+        {
+            auto prop = arg->getARgumentPropereties();
+            arg_address[arg_idx] = prop.arg_ptr;
+            arg_sizeof[arg_idx] = prop.sizeof_arg;
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
 
         template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const Img & arg, Types&&... Fargs)
