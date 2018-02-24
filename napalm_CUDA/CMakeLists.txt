@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(napalm_CUDA)
 
 set(CMAKE_CXX_STANDARD 11)
