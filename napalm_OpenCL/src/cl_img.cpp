@@ -11,6 +11,63 @@
 #include <CL/cl_gl.h>
 #endif
 
+
+void getInternalFormat(const napalm::ImgFormat & cl_format,
+    GLint &internal_format, GLenum & format, GLenum & type)
+{
+
+
+    switch (cl_format.data_type)
+    {
+    case napalm::DATA_TYPE_FLOAT:
+        type = GL_FLOAT;
+        break;
+    case napalm::DATA_TYPE_UNORM_INT8:
+        type = GL_UNSIGNED_BYTE;
+        break;
+    case napalm::DATA_TYPE_UNORM_INT16:
+        type = GL_UNSIGNED_SHORT;
+        break;
+    case napalm::DATA_TYPE_UNSIGNED_INT8:
+        type = GL_UNSIGNED_BYTE;
+        break;
+    case napalm::DATA_TYPE_UNSIGNED_INT16:
+        type = GL_UNSIGNED_SHORT;
+        break;
+    default:
+        assert(false && "cannot create gl shared image type");
+        std::runtime_error("cannot create gl shared image type");
+        break;
+    }
+
+    switch (cl_format.img_channel_format)
+    {
+    case napalm::IMG_CHANNEL_FORMAT_INTENSITY:
+    case napalm::IMG_CHANNEL_FORMAT_R:
+        if (type == GL_FLOAT)
+            internal_format = GL_R32F;
+        else if (type == GL_UNSIGNED_BYTE)
+            internal_format = GL_R8;
+        else if (type == GL_UNSIGNED_SHORT)
+            internal_format = GL_R16UI;
+        format = GL_RED;
+        break;
+    case napalm::IMG_CHANNEL_FORMAT_RGBA:
+        if (type == GL_FLOAT)
+            internal_format = GL_RGBA32F;
+        else if (type == GL_UNSIGNED_BYTE)
+            internal_format = GL_RGBA;
+        else if (type == GL_UNSIGNED_SHORT)
+            internal_format = GL_RGBA16UI;
+        format = GL_RGBA;
+        break;
+    default:
+        assert(false && "cannot create gl shared image format");
+        std::runtime_error("cannot create gl shared image format");
+        break;
+    }
+}
+
 namespace napalm
 {
     namespace cl
@@ -32,66 +89,20 @@ namespace napalm
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                 //need to set GL_NEAREST
                 //(not GL_NEAREST_MIPMAP_* which would cause CL_INVALID_GL_OBJECT later)
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 //specify texture dimensions, format etc
                 GLint gl_internal_format = GL_RGBA;
                 GLenum gl_format = GL_RGBA;
-
-
-                switch (format.img_channel_format)
-                {
-                case napalm::IMG_CHANNEL_FORMAT_INTENSITY:
-                    gl_internal_format = GL_LUMINANCE;
-                    gl_format = gl_internal_format;
-                    break;
-                case napalm::IMG_CHANNEL_FORMAT_R:
-                    gl_internal_format = GL_LUMINANCE;
-                    gl_format = gl_internal_format;
-                    break;
-                case napalm::IMG_CHANNEL_FORMAT_A:
-                    gl_internal_format = GL_LUMINANCE;
-                    gl_format = gl_internal_format;
-                    break;
-                case napalm::IMG_CHANNEL_FORMAT_RGBA:
-                    gl_internal_format = GL_RGBA;
-                    gl_format = gl_internal_format;
-                    break;
-                default:
-                    assert(false && "cannot create gl shared image format");
-                    std::runtime_error("cannot create gl shared image format");
-                    break;
-                }
-
                 GLenum type = GL_FLOAT;
-
-                switch (format.data_type)
-                {
-                case napalm::DATA_TYPE_FLOAT:
-                    type = GL_FLOAT;
-                    break;
-                case napalm::DATA_TYPE_UNORM_INT8:
-                    type = GL_UNSIGNED_BYTE;
-                    break;
-                case napalm::DATA_TYPE_UNORM_INT16:
-                    type = GL_UNSIGNED_SHORT;
-                    break;
-                case napalm::DATA_TYPE_UNSIGNED_INT8:
-                    type = GL_UNSIGNED_BYTE;
-                    break;
-                case napalm::DATA_TYPE_UNSIGNED_INT16:
-                    type = GL_UNSIGNED_SHORT;
-                    break;
-                default:
-                    assert(false && "cannot create gl shared image type");
-                    std::runtime_error("cannot create gl shared image type");
-                    break;
-                }
+                getInternalFormat(format, gl_internal_format, gl_format, type);
 
                 glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, img_size.x, img_size.y, 0, gl_format, type, 0);
-                m_buffer = clCreateFromGLTexture(ctx->getCLContext(), getCLMemFlag(mem_flag), GL_TEXTURE_2D, 0, texture, NULL);
+                m_buffer = clCreateFromGLTexture(ctx->getCLContext(), getCLMemFlag(mem_flag), GL_TEXTURE_2D, 0, texture, &err);
+                handleError(err, "OpenCL Create gl image!");
                 glBindTexture(GL_TEXTURE_2D, 0);
                 m_gl_texture_id = int32_t(texture);
+
             }
             else
             {
@@ -103,7 +114,6 @@ namespace napalm
                 if (error != nullptr)
                     *error = int(err);
                 handleError(err, "OpenCL Create image!");
-
             }
         }
 
@@ -130,7 +140,7 @@ namespace napalm
             //TODO blocking write parameter, maybe wait list shuld be also considered
             cl_int err = clEnqueueWriteImage(m_ctx->getCQ(command_queue), m_buffer, block_queue,
                 img_origin, img_region, 0, 0, data, 0, nullptr, nullptr);
-            handleError(err, "OpenCL img create");
+            handleError(err, "OpenCL write image");
         }
 
         void CLImg::read(void * data, bool block_queue, int32_t command_queue) const
