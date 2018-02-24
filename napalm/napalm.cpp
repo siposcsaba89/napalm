@@ -21,7 +21,7 @@ namespace napalm
     class BackendLoader
     {
         typedef PlatformAndDeviceInfo*(*get_info_func)();
-        typedef Context*(*create_context_func)(int32_t platform_id, int32_t device_id, int32_t stream_count);
+        typedef Context*(*create_context_func)(int32_t platform_id, int32_t device_id, int32_t stream_count, GLSharedInfo * window_data);
         BackendLoader(const BackendLoader &) = delete;
         BackendLoader & operator = (const BackendLoader &) = delete;
         BackendLoader(const std::string & backend)
@@ -113,9 +113,9 @@ namespace napalm
             return get_info();
         }
 
-        Context* createContext(int32_t platform_id, int32_t device_id, int32_t stream_count) const
+        Context* createContext(int32_t platform_id, int32_t device_id, int32_t stream_count, GLSharedInfo * window_data) const
         {
-            return create_context(platform_id, device_id, stream_count);
+            return create_context(platform_id, device_id, stream_count, window_data);
         }
 
         bool isLoaded() const { return backend_loaded; }
@@ -189,11 +189,11 @@ namespace napalm
             return nullptr;
     }
 
-    NAPALM_EXPORT Context* createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count)
+    NAPALM_EXPORT Context* createContext(const char * api_type, int32_t platform_id, int32_t device_id, int32_t stream_count, GLSharedInfo * window_data)
     {
         auto backend = BackendManager::getManager().getLoader(api_type);
         if (backend)
-            return backend->createContext(platform_id, device_id, stream_count);
+            return backend->createContext(platform_id, device_id, stream_count, window_data);
         else
             return nullptr;
     }

@@ -3,9 +3,10 @@
 #include "cl_utils.h"
 #include <cstring>
 
-NAPALM_OPENCL_EXPORT napalm::Context * createContextOpenCL(int32_t platform_id, int32_t device_id, int32_t stream_count)
+NAPALM_OPENCL_EXPORT napalm::Context * createContextOpenCL(int32_t platform_id, int32_t device_id, int32_t stream_count, 
+    napalm::GLSharedInfo * window_data)
 {
-    return new napalm::cl::OpenCLContext(platform_id, device_id, stream_count);
+    return new napalm::cl::OpenCLContext(platform_id, device_id, stream_count, window_data);
 }
 
 NAPALM_OPENCL_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoOpenCL()

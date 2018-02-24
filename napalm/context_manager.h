@@ -2,6 +2,7 @@
 #include <string>
 #include <map>
 #include <napalm/napalm_export.h>
+#include <napalm/napalm.h>
 
 namespace napalm
 {
@@ -13,7 +14,7 @@ namespace napalm
     private:
         ContextManager() = default;
     public:
-        NAPALM_EXPORT Context * getDefault(const std::string & kind = "OpenCL", int32_t platform_id = 0, int32_t device_id = 0, int32_t queue_count = 1);
+        NAPALM_EXPORT Context * getDefault(const std::string & kind = "OpenCL", int32_t platform_id = 0, int32_t device_id = 0, int32_t queue_count = 1, GLSharedInfo * window_data = nullptr);
         NAPALM_EXPORT Context * getContext(const std::string & name);
         NAPALM_EXPORT void addContext(const std::string & name, Context * ctx);
     private:

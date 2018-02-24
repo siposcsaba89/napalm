@@ -11,7 +11,7 @@
 namespace napalm {
     namespace cuda
     {
-        CUDAContext::CUDAContext(int32_t platform_id, int32_t device_id, int32_t stream_count) : Context()
+        CUDAContext::CUDAContext(int32_t platform_id, int32_t device_id, int32_t stream_count, napalm::GLSharedInfo * window_info) : Context()
         {
             CUresult res = cuInit(0);
             napalm::cuda::handleError(res, "Cu init");

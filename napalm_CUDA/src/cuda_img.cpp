@@ -2,6 +2,14 @@
 #include "cuda_utils.h"
 #include "../include/napalm/cuda/cuda_img.h"
 #include <cassert>
+#if GL_SHARING_ENABLED
+#if HAVE_GLEW
+#include <GL/glew.h>
+#else
+#include <GLES2/gl2.h>
+#endif
+#include <cudaGL.h>
+#endif
 
 namespace napalm
 {
@@ -10,44 +18,134 @@ namespace napalm
         CUDAImg::CUDAImg(const CUDAContext * ctx, ImgFormat format, ImgRegion size, 
             MemFlag mem_flag, void * host_ptr, int32_t * error): m_ctx(ctx)
         {
+            img_size = size;
             this->mem_flag = mem_flag;
             CUresult res = CUDA_SUCCESS;
-            int num_channels = 0;
-            int byte_per_channels = 0;
-            if (size.z > 1)
-            {
-                CUDA_ARRAY3D_DESCRIPTOR desc;
-                memset(&desc, 0, sizeof(CUDA_ARRAY3D_DESCRIPTOR));
-                desc.Width = size.x;
-                desc.Height = size.y;
-                desc.Depth = size.z;
-                desc.Format = getCUDAImageForamt(format, desc.NumChannels, desc.Flags, byte_per_channels);
-                res = cuArray3DCreate(&m_buffer, &desc);
-                num_channels = int(desc.NumChannels);
 
+            unsigned int desc_flags = 0;
+            unsigned int desc_num_channels = 0;
+            int byte_per_channels = 0;
+
+            auto desc_format = getCUDAImageForamt(format, desc_num_channels, desc_flags, byte_per_channels);
+            m_channel_byte_count = desc_num_channels * byte_per_channels;
+
+            if (mem_flag & MEM_FLAG_CREATE_GL_SHARED)
+            {
+
+                GLuint texture;
+                glGenTextures(1, &texture);
+                //binnding the texture
+                glBindTexture(GL_TEXTURE_2D, texture);
+                //regular sampler params
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                //need to set GL_NEAREST
+                //(not GL_NEAREST_MIPMAP_* which would cause CL_INVALID_GL_OBJECT later)
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                //specify texture dimensions, format etc
+                GLint gl_internal_format = GL_RGBA;
+                GLenum gl_format = GL_RGBA;
+
+
+                switch (format.img_channel_format)
+                {
+                case napalm::IMG_CHANNEL_FORMAT_INTENSITY:
+                    gl_internal_format = GL_LUMINANCE;
+                    gl_format = gl_internal_format;
+                    break;
+                case napalm::IMG_CHANNEL_FORMAT_R:
+                    gl_internal_format = GL_LUMINANCE;
+                    gl_format = gl_internal_format;
+                    break;
+                case napalm::IMG_CHANNEL_FORMAT_A:
+                    gl_internal_format = GL_LUMINANCE;
+                    gl_format = gl_internal_format;
+                    break;
+                case napalm::IMG_CHANNEL_FORMAT_RGBA:
+                    gl_internal_format = GL_RGBA;
+                    gl_format = gl_internal_format;
+                    break;
+                default:
+                    assert(false && "cannot create gl shared image format");
+                    std::runtime_error("cannot create gl shared image format");
+                    break;
+                }
+
+                GLenum type = GL_FLOAT;
+
+                switch (format.data_type)
+                {
+                case napalm::DATA_TYPE_FLOAT:
+                    type = GL_FLOAT;
+                    break;
+                case napalm::DATA_TYPE_UNORM_INT8:
+                    type = GL_UNSIGNED_BYTE;
+                    break;
+                case napalm::DATA_TYPE_UNORM_INT16:
+                    type = GL_UNSIGNED_SHORT;
+                    break;
+                case napalm::DATA_TYPE_UNSIGNED_INT8:
+                    type = GL_UNSIGNED_BYTE;
+                    break;
+                case napalm::DATA_TYPE_UNSIGNED_INT16:
+                    type = GL_UNSIGNED_SHORT;
+                    break;
+                default:
+                    assert(false && "cannot create gl shared image type");
+                    std::runtime_error("cannot create gl shared image type");
+                    break;
+                }
+
+                glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, img_size.x, img_size.y, 0, gl_format, type, 0);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                m_gl_texture_id = int32_t(texture);
+                glFinish();
+                res = cuGraphicsGLRegisterImage(&m_cu_graphics_resource, texture, GL_TEXTURE_2D, 
+                    CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST | CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER);
+                handleError(res, "Cuda error gl register image");
+                
+                res = cuGraphicsMapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(0));
+                handleError(res, "Cuda error gl map resource");
+                res = cuGraphicsSubResourceGetMappedArray(&m_buffer, m_cu_graphics_resource, 0, 0);
+                handleError(res, "Cuda error get mapped array");
+                res = cuGraphicsUnmapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(0));
+                handleError(res, "Cuda error unmap resource");
             }
             else
             {
-                CUDA_ARRAY_DESCRIPTOR desc;
-                memset(&desc, 0, sizeof(CUDA_ARRAY_DESCRIPTOR));
-                unsigned int flags = 0;
-                desc.Format = getCUDAImageForamt(format, desc.NumChannels, flags, byte_per_channels);
-                desc.Width = size.x;
-                desc.Height = size.y;
-                res = cuArrayCreate(&m_buffer, &desc);
-                num_channels = int(desc.NumChannels);
+                if (size.z > 1)
+                {
+                    CUDA_ARRAY3D_DESCRIPTOR desc;
+                    memset(&desc, 0, sizeof(CUDA_ARRAY3D_DESCRIPTOR));
+                    desc.Width = size.x;
+                    desc.Height = size.y;
+                    desc.Depth = size.z;
+                    desc.Format = desc_format;
+                    desc.NumChannels = desc_num_channels;
+                    desc.Flags = desc_flags;
+                    res = cuArray3DCreate(&m_buffer, &desc);
+                }
+                else
+                {
+                    CUDA_ARRAY_DESCRIPTOR desc;
+                    memset(&desc, 0, sizeof(CUDA_ARRAY_DESCRIPTOR));
+                    desc.Format = desc_format;
+                    desc.Width = size.x;
+                    desc.Height = size.y;
+                    desc.NumChannels = desc_num_channels;
+                    res = cuArrayCreate(&m_buffer, &desc);
+                }
+                handleError(res, "Cuda array create");
+                if (error != nullptr)
+                    *error = int(res);
             }
-            m_channel_byte_count = num_channels * byte_per_channels;
-            handleError(res, "Cuda array create");
-            img_size = size;
-            if (error != nullptr)
-                *error = int(res);
 
-            CUDA_RESOURCE_DESC m_r_desc;
-            memset(&m_r_desc, 0, sizeof(CUDA_RESOURCE_DESC));
-            m_r_desc.resType = CU_RESOURCE_TYPE_ARRAY;
-            m_r_desc.res.array.hArray = m_buffer;
-            m_r_desc.flags = 0;
+            CUDA_RESOURCE_DESC r_desc;
+            memset(&r_desc, 0, sizeof(CUDA_RESOURCE_DESC));
+            r_desc.resType = CU_RESOURCE_TYPE_ARRAY;
+            r_desc.res.array.hArray = m_buffer;
+            r_desc.flags = 0;
             CUDA_TEXTURE_DESC t_desc;
             memset(&t_desc, 0, sizeof(CUDA_TEXTURE_DESC));
             t_desc.addressMode[0] = CU_TR_ADDRESS_MODE_CLAMP; /// TODO;
@@ -55,14 +153,19 @@ namespace napalm
             t_desc.addressMode[2] = CU_TR_ADDRESS_MODE_CLAMP; /// TODO;
             t_desc.filterMode = CU_TR_FILTER_MODE_LINEAR; /// TODO set from outside
 
-            res = cuTexObjectCreate(&m_texture, &m_r_desc, &t_desc, nullptr);
+            res = cuTexObjectCreate(&m_texture, &r_desc, &t_desc, nullptr);
             handleError(res, "Cuda Texture create!");
-            res = cuSurfObjectCreate(&m_surface, &m_r_desc);
+            res = cuSurfObjectCreate(&m_surface, &r_desc);
             handleError(res, "Cuda Surface create!");
 
             if (host_ptr && (mem_flag & MEM_FLAG_COPY_HOST_PTR))
+            {
+                mapGLImage(0);
                 write(host_ptr, true, 0);
+                unmapGLImage();
+            }
             handleError(res, "CUDA Create image!");
+
         }
 
         void CUDAImg::write(const void * data, bool block_queue, int32_t command_queue)
@@ -181,6 +284,32 @@ namespace napalm
         ArgumentPropereties CUDAImg::getARgumentProperetiesWritable()
         {
             return ArgumentPropereties(&m_surface, sizeof(m_surface));
+        }
+
+        int32_t CUDAImg::getGLTextureID() const
+        {
+            return m_gl_texture_id;
+        }
+
+        void CUDAImg::mapGLImage(int32_t command_queue)
+        {
+            if (mem_flag & MEM_FLAG_CREATE_GL_SHARED)
+            {
+                m_gl_queue_acquired = command_queue;
+                glFinish();
+                auto res = cuGraphicsMapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(m_gl_queue_acquired));
+                handleError(res , "cuda error graphics map resource!");
+            }
+        }
+
+        void CUDAImg::unmapGLImage()
+        {
+            if (mem_flag & MEM_FLAG_CREATE_GL_SHARED)
+            {
+                m_ctx->finish(m_gl_queue_acquired);
+                auto res = cuGraphicsUnmapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(m_gl_queue_acquired));
+                handleError(res, "cuda error graphics unmap resource!");
+            }
         }
 
         CUDAImg::~CUDAImg()

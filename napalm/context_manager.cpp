@@ -32,14 +32,14 @@ namespace napalm
             //assert(false && "Context does not exists!!!");
         }
     }
-    Context * ContextManager::getDefault(const std::string & backend, int32_t platform_id, int32_t device_id, int32_t queue_count)
+    Context * ContextManager::getDefault(const std::string & backend, int32_t platform_id, int32_t device_id, int32_t queue_count, GLSharedInfo * window_data)
     {
         auto it = m_ctxs.find("default");
         if (it != m_ctxs.end())
             return it->second;
         else
         {
-            Context * ctx = createContext(backend.c_str(), platform_id, device_id, queue_count);
+            Context * ctx = createContext(backend.c_str(), platform_id, device_id, queue_count, window_data);
             m_ctxs["default"] = ctx;
             return ctx;
         }

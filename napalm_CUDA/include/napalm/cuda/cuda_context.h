@@ -10,7 +10,7 @@ namespace napalm
         class CUDAContext : public napalm::Context
         {
         public:
-            CUDAContext(int32_t platform_id, int32_t device_id, int32_t stream_count);
+            CUDAContext(int32_t platform_id, int32_t device_id, int32_t stream_count, napalm::GLSharedInfo * window_info);
             virtual napalm::Buffer * createBuffer(size_t size, 
                 MemFlag flag = MEM_FLAG_READ_WRITE,
                 void * host_ptr = nullptr, int32_t * error = 0) const;

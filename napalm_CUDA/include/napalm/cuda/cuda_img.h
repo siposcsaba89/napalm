@@ -19,6 +19,11 @@ namespace napalm {
             virtual void unmap(int32_t command_queue);
             virtual ArgumentPropereties getARgumentPropereties() const;
             virtual ArgumentPropereties getARgumentProperetiesWritable();
+
+            virtual int32_t getGLTextureID() const;
+            virtual void mapGLImage(int32_t command_queue = 0);
+            virtual void unmapGLImage();
+
             virtual ~CUDAImg();
         private:
             CUarray m_buffer;
@@ -27,6 +32,9 @@ namespace napalm {
             const CUDAContext * m_ctx;
             void * m_map_address = nullptr;
             int32_t m_channel_byte_count = 0;
+            int32_t m_gl_texture_id = -1;
+            CUgraphicsResource m_cu_graphics_resource;
+            int32_t m_gl_queue_acquired = -1;
         };
     }
 }

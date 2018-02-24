@@ -11,7 +11,7 @@ namespace napalm
         class OpenCLContext : public napalm::Context
         {
         public:
-            OpenCLContext(int32_t platform_id, int32_t device_id, int32_t stream_count);
+            OpenCLContext(int32_t platform_id, int32_t device_id, int32_t stream_count, napalm::GLSharedInfo * window_data);
             virtual napalm::Buffer * createBuffer(size_t size, 
                 MemFlag flag = MEM_FLAG_READ_WRITE,
                 void * host_ptr = nullptr, int32_t * error = 0) const;

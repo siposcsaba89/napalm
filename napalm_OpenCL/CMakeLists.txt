@@ -4,6 +4,8 @@ project(napalm_OpenCL)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+option(BUILD_WITH_GL_SHARING_ENABLED "Build with opengl sharing enabled (glew, egl/es2 required)" ON)
+
 
 find_package(OpenCL REQUIRED)
 add_library(::opencl SHARED IMPORTED)
@@ -46,6 +48,42 @@ set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 if (MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
+
+if (BUILD_WITH_GL_SHARING_ENABLED)
+	find_package(glew QUIET CONFIG)
+	if (NOT glew_FOUND)
+	    # hope gles2 is available
+	    find_library(GLESV2_LIBRARY NAMES GLESv2 PATHS /usr/lib/)
+	    find_path(GL2_INCLUDE NAMES GLES2/gl2.h PATHS /usr/include)
+	 
+	    if (GLESV2_LIB AND GL2_INCLUDE)
+	        add_library(::gles2 SHARED IMPORTED)
+	        set_property(TARGET ::gles2 PROPERTY IMPORTED_IMPLIB_RELEASE ${GLESV2_LIB})
+	        set_property(TARGET ::gles2 PROPERTY IMPORTED_LOCATION_RELEASE ${GLESV2_LIB})
+	        set_property(TARGET ::gles2 PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+	        set_property(TARGET ::gles2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+	            $<INSTALL_INTERFACE:${GL2_INCLUDE}>  # <prefix>/include/mylib
+	            $<BUILD_INTERFACE:${GL2_INCLUDE}>  # <prefix>/include/mylib
+	        )
+	        set_property(TARGET ::gles2 PROPERTY INTERFACE_COMPILE_DEFINITIONS HAVE_GLES2 GLFW_INCLUDE_ES2)
+	        set(gles2_FOUND TRUE)
+	    else()
+	        set(gles2_FOUND FALSE)
+	    endif()
+	endif()
+	 
+	if (glew_FOUND)
+	    target_link_libraries(${PROJECT_NAME} PUBLIC ::glew)
+	    target_compile_definitions(${PROJECT_NAME} PUBLIC -DHAVE_GLEW=1)
+        set(gles2_FOUND FALSE)
+	elseif(gles2_FOUND)
+	    target_link_libraries(${PROJECT_NAME} PUBLIC ::gles2)
+	else()
+	    message(FATAL_ERROR "Could not find glew nor gles2")
+	endif()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DGL_SHARING_ENABLED=1)
+endif()
+
 
 source_group(napalm_OpenCL FILES ${PUBLIC_HDRS})
 

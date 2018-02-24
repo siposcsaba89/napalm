@@ -8,4 +8,39 @@ set_property(TARGET ::opencl PROPERTY INTERFACE_INCLUDE_DIRECTORIES
     $<INSTALL_INTERFACE:${OpenCL_INCLUDE_DIR}>  # <prefix>/include/mylib
     $<BUILD_INTERFACE:${OpenCL_INCLUDE_DIR}>  # <prefix>/include/mylib
 )
+
+#opengl
+if (@BUILD_WITH_GL_SHARING_ENABLED@ AND @gles2_FOUND@)
+	    # hope gles2 is available
+	    find_library(GLESV2_LIBRARY NAMES GLESv2 PATHS /usr/lib/)
+	    find_path(GL2_INCLUDE NAMES GLES2/gl2.h PATHS /usr/include)
+	 
+	    if (GLESV2_LIB AND GL2_INCLUDE)
+	        add_library(::gles2 SHARED IMPORTED)
+	        set_property(TARGET ::gles2 PROPERTY IMPORTED_IMPLIB_RELEASE ${GLESV2_LIB})
+	        set_property(TARGET ::gles2 PROPERTY IMPORTED_LOCATION_RELEASE ${GLESV2_LIB})
+	        set_property(TARGET ::gles2 PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+	        set_property(TARGET ::gles2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+	            $<INSTALL_INTERFACE:${GL2_INCLUDE}>
+	            $<BUILD_INTERFACE:${GL2_INCLUDE}>
+	        )
+	        set_property(TARGET ::gles2 PROPERTY INTERFACE_COMPILE_DEFINITIONS HAVE_GLES2 GLFW_INCLUDE_ES2)
+	        set(gles2_FOUND TRUE)
+	    else()
+	        set(gles2_FOUND FALSE)
+	    endif()
+        if (NOT gles2_FOUND)
+            message(FATAL_ERROR "Could not find gles2")
+        endif()
+        
+elseif (@BUILD_WITH_GL_SHARING_ENABLED@ AND @glew_FOUND@)
+
+    find_dependency(glew CONFIG)
+	if (NOT glew_FOUND)
+	    message(FATAL_ERROR "Could not find glew")
+	endif()
+else()
+    message(STATUS "Build without OpenGL support!")
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake)

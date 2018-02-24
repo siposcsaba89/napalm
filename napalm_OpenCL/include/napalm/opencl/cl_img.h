@@ -19,11 +19,16 @@ namespace napalm {
             virtual void unmap(int32_t command_queue);
 			virtual ArgumentPropereties getARgumentPropereties() const;
 			virtual ArgumentPropereties getARgumentProperetiesWritable();
+            virtual int32_t getGLTextureID() const;
+            virtual void mapGLImage(int32_t command_queue);
+            virtual void unmapGLImage();
             virtual ~CLImg();
         private:
             cl_mem m_buffer;
             const OpenCLContext * m_ctx;
             void * m_map_address = nullptr;
+            int32_t m_gl_texture_id = -1;
+            int32_t m_gl_queue_acquired = -1;
         };
     }
 }

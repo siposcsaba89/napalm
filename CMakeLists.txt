@@ -51,7 +51,6 @@ if (MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
-
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/${PROJECT_NAME}/${PROJECT_NAME}_export.h)
 

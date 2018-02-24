@@ -3,9 +3,10 @@
 #include "cuda_utils.h"
 #include <cuda.h>
 #include <cstring>
-NAPALM_CUDA_EXPORT napalm::Context * createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count)
+NAPALM_CUDA_EXPORT napalm::Context * createContextCUDA(int32_t platform_id, int32_t device_id, int32_t stream_count, 
+    napalm::GLSharedInfo * window_data)
 {
-    return new napalm::cuda::CUDAContext(platform_id, device_id, stream_count);
+    return new napalm::cuda::CUDAContext(platform_id, device_id, stream_count, window_data);
 }
 
 NAPALM_CUDA_EXPORT napalm::PlatformAndDeviceInfo * getPlatformAndDeviceInfoCUDA()

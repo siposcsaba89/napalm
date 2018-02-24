@@ -26,7 +26,7 @@ namespace napalm
         MEM_FLAG_HOST_WRITE_ONLY = 1 << 6,
         MEM_FLAG_HOST_READ_ONLY = 1 << 7,
         MEM_FLAG_HOST_NO_ACCESS = 1 << 8,
-
+        MEM_FLAG_CREATE_GL_SHARED = 1 << 9, /// use on image creation, creates gl shared image
     };
 
     inline const MemFlag operator|(MemFlag a, MemFlag b)
@@ -121,6 +121,10 @@ namespace napalm
         virtual ArgumentPropereties getARgumentPropereties() const = 0;
         virtual ArgumentPropereties getARgumentProperetiesWritable() = 0;
         virtual ~Img() {}
+        /// returns the gl texture id, usable on only images created with MEM_FLAG_CREATE_GL_SHARED
+        virtual int32_t getGLTextureID() const = 0;
+        virtual void mapGLImage(int32_t command_queue = 0) = 0;
+        virtual void unmapGLImage() = 0;
     public:
         ImgRegion img_size;
         MemFlag mem_flag;
@@ -377,8 +381,14 @@ namespace napalm
         }
     };
 
+    struct GLSharedInfo
+    {
+        void * gl_context = nullptr; //
+        void * native_window = nullptr;
+    };
+
     NAPALM_EXPORT bool isBackendAvailable(const char * api_type);
     NAPALM_EXPORT PlatformAndDeviceInfo * getPlatformAndDeviceInfo(const char * api_type);
-    NAPALM_EXPORT Context * createContext(const char * kind, int32_t platform_id, int32_t device_id, int32_t stream_count);
+    NAPALM_EXPORT Context * createContext(const char * kind, int32_t platform_id, int32_t device_id, int32_t stream_count, GLSharedInfo * window_data = nullptr);
     NAPALM_EXPORT void destroyContext(Context * ctx);
 }
