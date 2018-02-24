@@ -84,7 +84,8 @@ foreach(pn ${PROGRAM_NAMES})
 
             # Append data to output file
         else()
-            file(COPY ${f} DESTINATION ${PROGRAM_RUNTIME_SOURCE_DIR})
+            #file(COPY ${f} DESTINATION ${PROGRAM_RUNTIME_SOURCE_DIR})
+            #message(STATUS "COPY ${f} ${PROGRAM_RUNTIME_SOURCE_DIR}")
             get_filename_component(FILENAME ${f} NAME)
             set(FILEDATA "\"${PROGRAM_RUNTIME_SOURCE_DIR}/${FILENAME}\"")
         endif()
