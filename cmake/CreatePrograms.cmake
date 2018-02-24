@@ -11,6 +11,10 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
     set (PROGRAM_RUNTIME_SOURCE_DIR "./")
     if (DEFINED ARGV5)
         set (PROGRAM_RUNTIME_SOURCE_DIR ${ARGV5})
+        if(NOT IS_ABSOLUTE ${PROGRAM_RUNTIME_SOURCE_DIR})
+            set(PROGRAM_RUNTIME_SOURCE_DIR "${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}")
+        endif()
+        message(STATUS ${PROGRAM_RUNTIME_SOURCE_DIR})
     endif()
 
 
@@ -37,11 +41,19 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         endif()
         
         if (NOT EMBED_PROGRAM_FILES)
-            if ((${f_ext} STREQUAL ".cu" AND NOT ${COMPILE_IN_BUILD_TYPE}) OR NOT (${f_ext} STREQUAL ".cu"))
-                add_custom_command(
-                    OUTPUT ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}
-                    COMMAND ${CMAKE_COMMAND} -E copy ${f} ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}
-                    MAIN_DEPENDENCY ${f})
+            get_filename_component(s_dir ${f} DIRECTORY )
+            get_filename_component(t_dir "${PROGRAM_RUNTIME_SOURCE_DIR}/dummy.txt" DIRECTORY)
+            message(STATUS "${s_dir} == ${t_dir}")
+            if (NOT ${s_dir} STREQUAL ${t_dir})
+                if ((${f_ext} STREQUAL ".cu" AND NOT ${COMPILE_IN_BUILD_TYPE}) OR NOT (${f_ext} STREQUAL ".cu"))
+                    message(STATUS "File to copy: ${f} to ${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}")
+                    add_custom_command(
+                        OUTPUT ${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}
+                        COMMAND ${CMAKE_COMMAND} -E copy ${f} ${PROGRAM_RUNTIME_SOURCE_DIR}/${filename}
+                        MAIN_DEPENDENCY ${f})
+                endif()
+            else()
+                message(STATUS "No need to copy, target dir matches the source dir")
             endif()
         endif()
 
@@ -54,9 +66,9 @@ function(create_programs PROGRAM_FILES_IN output target COMPILE_IN_BUILD_TYPE)
         list(APPEND output napalm/gen/programs/${f}.h napalm/gen/programs/${f}.cpp)
     endforeach()
     
-    list(APPEND CUDA_NVCC_FLAGS "-gencode arch=compute_50,code=sm_50 --include-path=${CMAKE_CURRENT_SOURCE_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR}") 
+    list(APPEND CUDA_NVCC_FLAGS "-gencode arch=compute_50,code=sm_50 --include-path=${PROGRAM_RUNTIME_SOURCE_DIR}") 
     message(STATUS "CUDA NVCC FLAGS" ${CUDA_NVCC_FLAGS})
-    set(CUDA_GENERATED_OUTPUT_DIR ${CMAKE_BINARY_DIR}/${PROGRAM_RUNTIME_SOURCE_DIR})
+    set(CUDA_GENERATED_OUTPUT_DIR ${PROGRAM_RUNTIME_SOURCE_DIR})
     if (CUDA_FOUND AND ${COMPILE_IN_BUILD_TYPE})
         cuda_compile_ptx(CU_PROGRAM_FILES_PTXS ${CU_PROGRAM_FILES})
         list(APPEND PROGRAM_FILES ${CU_PROGRAM_FILES_PTXS})

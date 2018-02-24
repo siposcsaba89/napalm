@@ -139,7 +139,8 @@ namespace napalm {
                 //    //…
                 //}
 
-
+                m_cl_context = clCreateContext(prop, 1, &m_cl_device_id, nullptr, nullptr, &err);
+                handleError(err, "Context creating");
             }
             
             if (!gl_sharing_supported_by_device)
@@ -148,9 +149,8 @@ namespace napalm {
                 { CL_CONTEXT_PLATFORM, (cl_context_properties)platform_ids[platform_id],
                     0 };
                 m_cl_context = clCreateContext(prop, 1, &m_cl_device_id, nullptr, nullptr, &err);
-
+                handleError(err, "Context creating");
             }
-            handleError(err, "Context creating");
             printf("OpenCL context created! \n");
 
             m_command_queues.resize(stream_count);
