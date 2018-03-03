@@ -104,6 +104,17 @@ namespace napalm
         int32_t x = 0;
         int32_t y = 0;
         int32_t z = 0;
+
+        ImgRegion getBlocks(int32_t padding_x, 
+            int32_t padding_y = 1,
+            int32_t padding_z = 1)
+        {
+            ImgRegion ret;
+            ret.x = ((x + padding_x - 1) / padding_x);
+            ret.y = ((y + padding_y - 1) / padding_y);
+            ret.z = ((z + padding_z - 1) / padding_z);
+            return ret;
+        }
     };
 
     struct Img

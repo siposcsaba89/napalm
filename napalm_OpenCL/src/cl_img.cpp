@@ -49,7 +49,7 @@ void getInternalFormat(const napalm::ImgFormat & cl_format,
         else if (type == GL_UNSIGNED_BYTE)
             internal_format = GL_R8;
         else if (type == GL_UNSIGNED_SHORT)
-            internal_format = GL_R16UI;
+            internal_format = GL_R16;
         format = GL_RED;
         break;
     case napalm::IMG_CHANNEL_FORMAT_RGBA:
@@ -58,7 +58,7 @@ void getInternalFormat(const napalm::ImgFormat & cl_format,
         else if (type == GL_UNSIGNED_BYTE)
             internal_format = GL_RGBA;
         else if (type == GL_UNSIGNED_SHORT)
-            internal_format = GL_RGBA16UI;
+            internal_format = GL_RGBA16;
         format = GL_RGBA;
         break;
     default:
@@ -243,7 +243,7 @@ namespace napalm
         {
             if (mem_flag & MEM_FLAG_CREATE_GL_SHARED)
             {
-                m_ctx->finish(m_gl_queue_acquired);
+                //m_ctx->finish(m_gl_queue_acquired);
                 cl_int err = clEnqueueReleaseGLObjects(m_ctx->getCQ(m_gl_queue_acquired), 1, &m_buffer, 0, nullptr, nullptr);
                 handleError(err, "Unmapping gl image!");
             }
