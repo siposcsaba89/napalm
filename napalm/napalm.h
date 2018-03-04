@@ -186,6 +186,14 @@ namespace napalm
             fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
         }
 
+        template <typename T, typename ... Types>
+        void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, const T & arg, Types&&... Fargs)
+        {
+            arg_address[arg_idx] = (void*)&arg;
+            arg_sizeof[arg_idx] = sizeof(arg);
+            fillArgVector(++arg_idx, arg_address, arg_sizeof, Fargs...);
+        }
+
         template <typename ... Types>
         void fillArgVector(int32_t arg_idx, void** arg_address, size_t * arg_sizeof, Buffer & arg, Types&&... Fargs)
         {
