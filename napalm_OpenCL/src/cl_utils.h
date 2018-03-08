@@ -11,8 +11,13 @@ namespace napalm
         std::string getPlatformInfo(const std::vector<cl_platform_id> & platform_ids,
             int platform_id, int info_name);
 
+        std::string getPlatformInfo(cl_platform_id platform_id, int info_name);
+
         std::string getDevInfo(const std::vector<cl_device_id> & dev_ids,
             int dev_id, int info_name);
+
+        std::string getDevInfo(cl_device_id dev_id, int info_name);
+
 
         void handleError(cl_int err, const std::string & msg);
 

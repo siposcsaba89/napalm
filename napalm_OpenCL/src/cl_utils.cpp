@@ -6,21 +6,31 @@
 
 std::string napalm::cl::getPlatformInfo(const std::vector<cl_platform_id>& platform_ids, int platform_id, int info_name)
 {
+    return getPlatformInfo(platform_ids[platform_id], info_name);
+}
+
+std::string napalm::cl::getPlatformInfo(cl_platform_id platform_id, int info_name)
+{
     size_t info_size = 0;
-    clGetPlatformInfo(platform_ids[platform_id], info_name, 0, nullptr, &info_size);
+    clGetPlatformInfo(platform_id, info_name, 0, nullptr, &info_size);
     std::string str;
     str.resize(info_size);
-    clGetPlatformInfo(platform_ids[platform_id], info_name, info_size, &str[0], nullptr);
+    clGetPlatformInfo(platform_id, info_name, info_size, &str[0], nullptr);
     return std::move(str);
 }
 
 std::string napalm::cl::getDevInfo(const std::vector<cl_device_id>& dev_ids, int dev_id, int info_name)
 {
+    return getDevInfo(dev_ids[dev_id], info_name);
+}
+
+std::string napalm::cl::getDevInfo(cl_device_id dev_id, int info_name)
+{
     size_t info_size = 0;
-    clGetDeviceInfo(dev_ids[dev_id], info_name, 0, nullptr, &info_size);
+    clGetDeviceInfo(dev_id, info_name, 0, nullptr, &info_size);
     std::string str;
     str.resize(info_size);
-    clGetDeviceInfo(dev_ids[dev_id], info_name, info_size, &str[0], nullptr);
+    clGetDeviceInfo(dev_id, info_name, info_size, &str[0], nullptr);
     return std::move(str);
 }
 
