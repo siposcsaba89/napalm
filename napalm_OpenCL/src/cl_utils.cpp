@@ -180,9 +180,21 @@ void napalm::cl::getCLImageForamt(ImgFormat format, ImgRegion size, cl_image_for
     cl_img_d.image_width = size.x;
     cl_img_d.image_height = size.y;
     cl_img_d.image_depth = size.z;
-    if (size.z == 1) cl_img_d.image_type = CL_MEM_OBJECT_IMAGE2D;
-    else if (size.z > 1) cl_img_d.image_type = CL_MEM_OBJECT_IMAGE3D;
-    else assert(false && "Invalid image size");
+    auto img_type = format.img_type;
+    switch (img_type)
+    {
+    case napalm::IMAGE_TYPE_IMAGE1D:
+        cl_img_d.image_type = CL_MEM_OBJECT_IMAGE1D;
+        break;
+    case napalm::IMAGE_TYPE_IMAGE2D:
+        cl_img_d.image_type = CL_MEM_OBJECT_IMAGE2D;
+        break;
+    case napalm::IMAGE_TYPE_IMAGE3D:
+        cl_img_d.image_type = CL_MEM_OBJECT_IMAGE3D;
+        break;
+    default:
+        break;
+    }
     cl_img_d.image_array_size = 0;
     cl_img_d.image_slice_pitch = 0;
     cl_img_d.num_mip_levels = 0;

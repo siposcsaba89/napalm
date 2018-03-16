@@ -66,13 +66,24 @@ namespace napalm
         IMG_CHANNEL_FORMAT_RGBA
     };
 
+    enum ImageType : int32_t
+    {
+        IMAGE_TYPE_IMAGE1D = 0,
+        IMAGE_TYPE_IMAGE2D = 1,
+        IMAGE_TYPE_IMAGE3D = 2
+    };
+
     struct ImgFormat
     {
         DataType data_type;
         ImgChannelFormat img_channel_format;
+        ImageType img_type;
         ImgFormat(ImgChannelFormat img_format = IMG_CHANNEL_FORMAT_INTENSITY, 
-            DataType img_data_type = DATA_TYPE_UNORM_INT8) : 
-            data_type(img_data_type), img_channel_format(img_format){}
+            DataType img_data_type = DATA_TYPE_UNORM_INT8,
+            ImageType image_type = IMAGE_TYPE_IMAGE2D) : 
+            data_type(img_data_type), img_channel_format(img_format),
+            img_type(image_type)
+        {}
     };
 
     struct ArgumentPropereties
