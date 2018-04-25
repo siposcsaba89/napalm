@@ -5,14 +5,34 @@ namespace napalm {
     namespace cl {
         struct CLBuffer : public Buffer
         {
-            CLBuffer(const OpenCLContext * ctx, size_t size, MemFlag flag, void * host_ptr, int32_t * err);
-            virtual void write(const void * data, bool block_queue, int32_t command_queue);
-            virtual void write(const void * data, size_t offet, size_t size, bool block_queue, int32_t command_queue);
-            virtual void read(void * data, bool block_queue, int32_t command_queue) const;
-            virtual void read(void * data, size_t offet, size_t size, bool block_queue, int32_t command_queue) const;
-            virtual void * map(MapMode mode, bool block_queue, int32_t command_queue);
-            virtual void * map(MapMode mode, size_t offset, size_t size, bool block_queue, int32_t command_queue);
-            virtual void unmap(int32_t command_queue);
+            CLBuffer(const OpenCLContext * ctx, 
+                size_t size, MemFlag flag, 
+                void * host_ptr, 
+                int32_t * err);
+            virtual void write(const void * data,
+                SyncMode block_queue, 
+                int32_t command_queue) override;
+            virtual void write(const void * data,
+                size_t offet,
+                size_t size,
+                SyncMode block_queue,
+                int32_t command_queue) override;
+            virtual void read(void * data,
+                SyncMode block_queue,
+                int32_t command_queue) const override;
+            virtual void read(void * data,
+                size_t offet, size_t size,
+                SyncMode block_queue,
+                int32_t command_queue) const override;
+            virtual void * map(MapMode mode,
+                SyncMode block_queue,
+                int32_t command_queue) override;
+            virtual void * map(MapMode mode,
+                size_t offset,
+                size_t size,
+                SyncMode block_queue,
+                int32_t command_queue) override;
+            virtual void unmap(int32_t command_queue) override;
 			virtual ArgumentPropereties getARgumentPropereties() const override;
             virtual ~CLBuffer();
         private:

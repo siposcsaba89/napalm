@@ -15,8 +15,12 @@ namespace napalm
 {
     namespace cuda
     {
-        CUDAImg::CUDAImg(const CUDAContext * ctx, ImgFormat format, ImgRegion size, 
-            MemFlag mem_flag, void * host_ptr, int32_t * error): m_ctx(ctx)
+        CUDAImg::CUDAImg(const CUDAContext * ctx,
+            ImgFormat format,
+            ImgRegion size, 
+            MemFlag mem_flag,
+            void * host_ptr,
+            int32_t * error): m_ctx(ctx)
         {
             img_size = size;
             this->mem_flag = mem_flag;
@@ -26,7 +30,10 @@ namespace napalm
             unsigned int desc_num_channels = 0;
             int byte_per_channels = 0;
 
-            auto desc_format = getCUDAImageForamt(format, desc_num_channels, desc_flags, byte_per_channels);
+            auto desc_format = getCUDAImageForamt(format, 
+                desc_num_channels,
+                desc_flags,
+                byte_per_channels);
             m_channel_byte_count = desc_num_channels * byte_per_channels;
 
             if (mem_flag & MEM_FLAG_CREATE_GL_SHARED)
@@ -97,19 +104,34 @@ namespace napalm
                     break;
                 }
 
-                glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, img_size.x, img_size.y, 0, gl_format, type, 0);
+                glTexImage2D(GL_TEXTURE_2D,
+                    0,
+                    gl_internal_format, 
+                    img_size.x, 
+                    img_size.y, 
+                    0, 
+                    gl_format,
+                    type, 
+                    0);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 m_gl_texture_id = int32_t(texture);
                 glFinish();
-                res = cuGraphicsGLRegisterImage(&m_cu_graphics_resource, texture, GL_TEXTURE_2D, 
-                    CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST | CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER);
+                res = cuGraphicsGLRegisterImage(&m_cu_graphics_resource, 
+                    texture, GL_TEXTURE_2D, 
+                    CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST | 
+                    CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER);
                 handleError(res, "Cuda error gl register image");
                 
-                res = cuGraphicsMapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(0));
+                res = cuGraphicsMapResources(1, 
+                    &m_cu_graphics_resource, 
+                    m_ctx->getCQ(0));
                 handleError(res, "Cuda error gl map resource");
-                res = cuGraphicsSubResourceGetMappedArray(&m_buffer, m_cu_graphics_resource, 0, 0);
+                res = cuGraphicsSubResourceGetMappedArray(&m_buffer,
+                    m_cu_graphics_resource, 
+                    0, 0);
                 handleError(res, "Cuda error get mapped array");
-                res = cuGraphicsUnmapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(0));
+                res = cuGraphicsUnmapResources(1, &m_cu_graphics_resource,
+                    m_ctx->getCQ(0));
                 handleError(res, "Cuda error unmap resource");
             }
             else
@@ -161,19 +183,25 @@ namespace napalm
             if (host_ptr && (mem_flag & MEM_FLAG_COPY_HOST_PTR))
             {
                 mapGLImage(0);
-                write(host_ptr, true, 0);
+                write(host_ptr, SYNC_MODE_BLOCKING, 0);
                 unmapGLImage();
             }
             handleError(res, "CUDA Create image!");
 
         }
 
-        void CUDAImg::write(const void * data, bool block_queue, int32_t command_queue)
+        void CUDAImg::write(const void * data,
+            SyncMode block_queue,
+            int32_t command_queue)
         {
             write(data, ImgRegion(0, 0, 0), img_size, block_queue, command_queue);
         }
 
-        void CUDAImg::write(const void * data, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue)
+        void CUDAImg::write(const void * data,
+            const ImgRegion & origin,
+            const ImgRegion & region,
+            SyncMode block_queue,
+            int32_t command_queue)
         {
             CUresult res = CUDA_SUCCESS;
             if (img_size.z > 1)
@@ -188,7 +216,7 @@ namespace napalm
                 copy_desc.dstArray = m_buffer;
                 copy_desc.srcMemoryType = CU_MEMORYTYPE_HOST;
                 copy_desc.srcHost = data;
-                if (block_queue)
+                if (block_queue == SYNC_MODE_BLOCKING)
                     res = cuMemcpy3D(&copy_desc);
                 else
                     res = cuMemcpy3DAsync(&copy_desc, m_ctx->getCQ(command_queue));
@@ -205,7 +233,7 @@ namespace napalm
                 copy_desc.srcPitch = region.x * m_channel_byte_count;
                 copy_desc.WidthInBytes = copy_desc.srcPitch;
                 copy_desc.Height = region.y;
-                if (block_queue)
+                if (block_queue == SYNC_MODE_BLOCKING)
                     res = cuMemcpy2D(&copy_desc);
                 else
                     res = cuMemcpy2DAsync(&copy_desc, m_ctx->getCQ(command_queue));
@@ -213,12 +241,18 @@ namespace napalm
             handleError(res, "CUDA img write");
         }
 
-        void CUDAImg::read(void * data, bool block_queue, int32_t command_queue) const
+        void CUDAImg::read(void * data,
+            SyncMode block_queue, 
+            int32_t command_queue) const
         {
             read(data, ImgRegion(0, 0, 0), img_size, block_queue, command_queue);
         }
 
-        void CUDAImg::read(void * data, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue) const
+        void CUDAImg::read(void * data,
+            const ImgRegion & origin, 
+            const ImgRegion & region, 
+            SyncMode block_queue,
+            int32_t command_queue) const
         {
             CUresult res = CUDA_SUCCESS;
             if (img_size.z > 1)
@@ -233,7 +267,7 @@ namespace napalm
                 copy_desc.srcMemoryType = CU_MEMORYTYPE_ARRAY;
                 copy_desc.dstHost = data;
                 copy_desc.srcArray = m_buffer;
-                if (block_queue)
+                if (block_queue == SYNC_MODE_BLOCKING)
                     res = cuMemcpy3D(&copy_desc);
                 else
                     res = cuMemcpy3DAsync(&copy_desc, m_ctx->getCQ(command_queue));
@@ -251,7 +285,7 @@ namespace napalm
                 copy_desc.dstHost = data;
                 copy_desc.srcArray = m_buffer;
 
-                if (block_queue)
+                if (block_queue == SYNC_MODE_BLOCKING)
                     res = cuMemcpy2D(&copy_desc);
                 else
                     res = cuMemcpy2DAsync(&copy_desc, m_ctx->getCQ(command_queue));
@@ -260,12 +294,18 @@ namespace napalm
          
         }
 
-        void * CUDAImg::map(MapMode mode, bool block_queue, int32_t command_queue)
+        void * CUDAImg::map(MapMode mode, 
+            SyncMode block_queue, 
+            int32_t command_queue)
         {
             return map(mode, ImgRegion(0, 0, 0), img_size, block_queue, command_queue);
         }
 
-        void * CUDAImg::map(MapMode mode, const ImgRegion & origin, const ImgRegion & region, bool block_queue, int32_t command_queue)
+        void * CUDAImg::map(MapMode mode,
+            const ImgRegion & origin,
+            const ImgRegion & region,
+            SyncMode block_queue,
+            int32_t command_queue)
         {
             assert(false && "Napalm cuda not support image mapping!");
             return nullptr;
@@ -297,7 +337,9 @@ namespace napalm
             {
                 m_gl_queue_acquired = command_queue;
                 glFinish();
-                auto res = cuGraphicsMapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(m_gl_queue_acquired));
+                auto res = cuGraphicsMapResources(1,
+                    &m_cu_graphics_resource, 
+                    m_ctx->getCQ(m_gl_queue_acquired));
                 handleError(res , "cuda error graphics map resource!");
             }
         }
@@ -307,7 +349,9 @@ namespace napalm
             if (mem_flag & MEM_FLAG_CREATE_GL_SHARED)
             {
                 m_ctx->finish(m_gl_queue_acquired);
-                auto res = cuGraphicsUnmapResources(1, &m_cu_graphics_resource, m_ctx->getCQ(m_gl_queue_acquired));
+                auto res = cuGraphicsUnmapResources(1, 
+                    &m_cu_graphics_resource, 
+                    m_ctx->getCQ(m_gl_queue_acquired));
                 handleError(res, "cuda error graphics unmap resource!");
             }
         }

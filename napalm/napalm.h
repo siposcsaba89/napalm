@@ -73,6 +73,12 @@ namespace napalm
         IMAGE_TYPE_IMAGE3D = 2
     };
 
+    enum SyncMode
+    {
+        SYNC_MODE_ASYNC = 0,
+        SYNC_MODE_BLOCKING = 1
+    };
+
     struct ImgFormat
     {
         DataType data_type;
@@ -95,12 +101,30 @@ namespace napalm
 
     struct Buffer
     {
-        virtual void write(const void * data, bool block_queue = true, int32_t command_queue = 0) = 0;
-        virtual void write(const void * data, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) = 0;
-        virtual void read(void * data, bool block_queue = true, int32_t command_queue = 0) const = 0;
-        virtual void read(void * data, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) const = 0;
-        virtual void * map(MapMode mode = MAP_MODE_READ, bool block_queue = true, int32_t command_queue = 0) = 0;
-        virtual void * map(MapMode mode, size_t offset, size_t size, bool block_queue = true, int32_t command_queue = 0) = 0;
+        virtual void write(const void * data, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
+        virtual void write(const void * data, 
+            size_t offset, 
+            size_t size, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
+        virtual void read(void * data, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING,
+            int32_t command_queue = 0) const = 0;
+        virtual void read(void * data, 
+            size_t offset, 
+            size_t size, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) const = 0;
+        virtual void * map(MapMode mode = MAP_MODE_READ, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
+        virtual void * map(MapMode mode, 
+            size_t offset, 
+            size_t size, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
         virtual ArgumentPropereties getARgumentPropereties() const = 0;
         virtual ~Buffer() {}
@@ -130,15 +154,30 @@ namespace napalm
 
     struct Img
     {
-        virtual void write(const void * data, bool block_queue = true, int32_t command_queue = 0) = 0;
-        virtual void write(const void * data, const ImgRegion & origin, 
-            const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) = 0;
-        virtual void read(void * data, bool block_queue = true, int32_t command_queue = 0) const = 0;
-        virtual void read(void * data, const ImgRegion & origin,
-            const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) const = 0;
-        virtual void * map(MapMode mode = MAP_MODE_READ, bool block_queue = true, int32_t command_queue = 0) = 0;
-        virtual void * map(MapMode mode, const ImgRegion & origin,
-            const ImgRegion & region, bool block_queue = true, int32_t command_queue = 0) = 0;
+        virtual void write(const void * data, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
+        virtual void write(const void * data,
+            const ImgRegion & origin, 
+            const ImgRegion & region, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
+        virtual void read(void * data, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) const = 0;
+        virtual void read(void * data,
+            const ImgRegion & origin,
+            const ImgRegion & region, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) const = 0;
+        virtual void * map(MapMode mode = MAP_MODE_READ, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING,
+            int32_t command_queue = 0) = 0;
+        virtual void * map(MapMode mode, 
+            const ImgRegion & origin,
+            const ImgRegion & region, 
+            SyncMode block_queue = SYNC_MODE_BLOCKING, 
+            int32_t command_queue = 0) = 0;
         virtual void unmap(int32_t command_queue = 0) = 0;
         virtual ArgumentPropereties getARgumentPropereties() const = 0;
         virtual ArgumentPropereties getARgumentProperetiesWritable() = 0;
