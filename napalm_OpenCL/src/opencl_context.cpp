@@ -110,21 +110,6 @@ namespace cl
             }
             if (gl_sharing_supported_by_device)
             {
-                size_t info_size = 0;
-                err = clGetDeviceInfo(m_cl_device_id, CL_DEVICE_PLATFORM, 0, nullptr, &info_size);
-                handleError(err, "Context creating");
-
-                if (info_size > 0)
-                {
-                    err = clGetDeviceInfo(m_cl_device_id, CL_DEVICE_PLATFORM, info_size,
-                        &cl_platform, &info_size);
-                    handleError(err, "Context creating");
-                }
-                else
-                {
-                    assert(false && "Cannot get platform for device!");
-                    std::runtime_error("Cannot get platform for device!");
-                }
 #ifdef WIN32
                 cl_context_properties prop[] = {
                     CL_GL_CONTEXT_KHR, (cl_context_properties)window_data->gl_context,
@@ -141,7 +126,6 @@ namespace cl
                 };
 
 #endif
-
                 m_cl_context = clCreateContext(prop, 1, &m_cl_device_id, nullptr, nullptr, &err);
                 handleError(err, "Context creating");
             }
