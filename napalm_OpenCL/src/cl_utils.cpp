@@ -145,7 +145,7 @@ cl_channel_order napalm::cl::getCLChannelOrder(ImgChannelFormat channel_format)
     switch (channel_format)
     {
     case napalm::IMG_CHANNEL_FORMAT_INTENSITY:
-        ret = CL_INTENSITY;
+        ret = CL_LUMINANCE;
         break;
     case napalm::IMG_CHANNEL_FORMAT_R:
         ret = CL_R;
