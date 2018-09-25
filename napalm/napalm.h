@@ -150,6 +150,14 @@ namespace napalm
             ret.z = ((z + padding_z - 1) / padding_z);
             return ret;
         }
+        ImgRegion getBlocks(const ImgRegion & other)
+        {
+            ImgRegion ret;
+            ret.x = ((x + other.x - 1) / other.x);
+            ret.y = ((y + other.y - 1) / other.y);
+            ret.z = ((z + other.z - 1) / other.z);
+            return ret;
+        }
     };
 
     struct Img
