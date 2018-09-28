@@ -158,6 +158,7 @@ namespace napalm
             ret.z = ((z + other.z - 1) / other.z);
             return ret;
         }
+        int32_t area() const { return x * y* z; }
     };
 
     struct Img
@@ -197,6 +198,7 @@ namespace napalm
     public:
         ImgRegion img_size;
         MemFlag mem_flag;
+        ImgFormat format;
     };
 
 

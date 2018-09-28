@@ -79,6 +79,7 @@ namespace napalm
             void * host_ptr, 
             int32_t * error): m_ctx(ctx)
         {
+            this->format = format;
             this->mem_flag = mem_flag;
             img_size = size;
             cl_int err = 0;

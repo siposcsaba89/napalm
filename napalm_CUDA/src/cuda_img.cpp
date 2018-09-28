@@ -22,6 +22,7 @@ namespace napalm
             void * host_ptr,
             int32_t * error): m_ctx(ctx)
         {
+            this->format = format;
             img_size = size;
             this->mem_flag = mem_flag;
             CUresult res = CUDA_SUCCESS;
