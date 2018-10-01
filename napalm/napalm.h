@@ -90,6 +90,18 @@ namespace napalm
             data_type(img_data_type), img_channel_format(img_format),
             img_type(image_type)
         {}
+        bool operator ==(const ImgFormat & o)
+        {
+            return data_type == o.data_type &&
+                img_channel_format == o.img_channel_format &&
+                img_type == o.img_type;
+        }
+        
+        bool operator != (const ImgFormat & o)
+        {
+            return !(*this == o);
+        }
+
     };
 
     struct ArgumentPropereties
@@ -159,6 +171,34 @@ namespace napalm
             return ret;
         }
         int32_t area() const { return x * y* z; }
+
+        bool operator ==(const ImgRegion & o)
+        {
+            return o.x == x && o.y == y && o.z == z;
+        }
+
+        bool operator !=(const ImgRegion & o)
+        {
+            return !(*this == o);
+        }
+
+        bool operator < (const ImgRegion & o)
+        {
+            return o.x < x || o.y < y || o.z < z;
+        }
+        bool operator > (const ImgRegion & o)
+        {
+            return o.x > x && o.y > y && o.z > z;
+        }
+        bool operator >= (const ImgRegion & o)
+        {
+            return !(*this < o);
+        }
+        bool operator <= (const ImgRegion & o)
+        {
+            return !(*this > o);
+        }
+
     };
 
     struct Img
