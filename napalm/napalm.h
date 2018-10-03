@@ -56,6 +56,9 @@ namespace napalm
         DATA_TYPE_UNSIGNED_INT32 = 12,
     };
 
+    int32_t bitSize(DataType dt);
+
+
     enum ImgChannelFormat
     {
         IMG_CHANNEL_FORMAT_INTENSITY,

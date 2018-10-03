@@ -18,6 +18,55 @@
 namespace napalm
 {
 
+    int bitSize(DataType dt)
+    {
+        switch (dt)
+        {
+        case napalm::DATA_TYPE_FLOAT:
+            return 32;
+            break;
+        case napalm::DATA_TYPE_HALF_FLOAT:
+            return 16;
+            break;
+        case napalm::DATA_TYPE_SNORM_INT8:
+            return 8;
+            break;
+        case napalm::DATA_TYPE_SNORM_INT16:
+            return 16;
+            break;
+        case napalm::DATA_TYPE_UNORM_INT8:
+            return 8;
+            break;
+        case napalm::DATA_TYPE_UNORM_INT16:
+            return 16;
+            break;
+        case napalm::DATA_TYPE_UNORM_INT24:
+            return 24;
+            break;
+        case napalm::DATA_TYPE_SIGNED_INT8:
+            return 8;
+            break;
+        case napalm::DATA_TYPE_SIGNED_INT16:
+            return 16;
+            break;
+        case napalm::DATA_TYPE_SIGNED_INT32:
+            return 32;
+            break;
+        case napalm::DATA_TYPE_UNSIGNED_INT8:
+            return 8;
+            break;
+        case napalm::DATA_TYPE_UNSIGNED_INT16:
+            return 16;
+            break;
+        case napalm::DATA_TYPE_UNSIGNED_INT32:
+            return 32;
+            break;
+        default:
+            return -1;
+            break;
+        }
+    }
+
     class BackendLoader
     {
         typedef PlatformAndDeviceInfo*(*get_info_func)();
