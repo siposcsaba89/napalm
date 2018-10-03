@@ -10,7 +10,7 @@ namespace napalm
         {
 @PROGRAM_DATA@
 
-            std::map<std::string, std::pair<std::string, ProgramData>> program_data =
+            static std::map<std::string, std::pair<std::string, ProgramData>> program_data =
             { 
 @PROGRAM_SOURCE@
             };

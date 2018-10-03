@@ -11,9 +11,11 @@ project(napalm)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-
+option(WITH_CUDA "Build napalm cuda backend" ON)
+option(WITH_OpenCL "Build napalm OpenCL backend" ON)
 option(BUILD_TIME_LINK_TO_NAPALM_CUDA "Link to napalm_CUDA in build time" OFF)
 option(BUILD_TIME_LINK_TO_NAPALM_OPENCL "Link to napalm_OpenCL in build time" OFF)
+
 
 if (NOT BUILD_SHARED_LIBS)
     set(BUILD_TIME_LINK_TO_NAPALM_CUDA ON CACHE BOOL "" FORCE)
@@ -53,18 +55,21 @@ endif()
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/gen/${PROJECT_NAME}/${PROJECT_NAME}_export.h)
+if (WITH_OpenCL)
+    find_package(OpenCL REQUIRED)
+    if (OpenCL_FOUND)
+        message(STATUS "Building with OpenCL, ${OpenCL_LIBRARIES}")
+        add_subdirectory(napalm_OpenCL)
+    endif(OpenCL_FOUND)
+endif()
 
-find_package(OpenCL REQUIRED)
-if (OpenCL_FOUND)
-    message(STATUS "Building with OpenCL, ${OpenCL_LIBRARIES}")
-    add_subdirectory(napalm_OpenCL)
-endif(OpenCL_FOUND)
-
-find_package(CUDA QUIET)
-if (CUDA_FOUND)
-    message(STATUS "Building with CUDA")
-    add_subdirectory(napalm_CUDA)
-endif(CUDA_FOUND)
+if(WITH_CUDA)
+    find_package(CUDA QUIET)
+    if (CUDA_FOUND)
+        message(STATUS "Building with CUDA")
+        add_subdirectory(napalm_CUDA)
+    endif(CUDA_FOUND)
+endif()
 
 
 
