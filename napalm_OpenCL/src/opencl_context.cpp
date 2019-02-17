@@ -199,6 +199,12 @@ namespace cl
         printf("Selected device name: %s \n",
             getDevInfo(m_cl_device_id, CL_DEVICE_NAME).c_str());
 
+        printf("Selected device OpenCL device version: %s \n",
+               getDevInfo(m_cl_device_id, CL_DEVICE_VERSION).c_str());
+        printf("Selected device OpenCL C device version: %s \n",
+               getDevInfo(m_cl_device_id, CL_DEVICE_OPENCL_C_VERSION).c_str());
+
+
 
     }
 
