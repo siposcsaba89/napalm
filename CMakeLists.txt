@@ -47,6 +47,7 @@ if (BUILD_SHARED_LIBS)
     set_target_properties(${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX _d)
+set_target_properties(${PROJECT_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX _rd)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER libs)
 
 if (MSVC)
@@ -142,6 +143,7 @@ if (BUILD_EXAMPLES)
         ${PROGRAM_RUNTIME_SOURCE_DIR}
         )
     set_target_properties(napalm_simple PROPERTIES DEBUG_POSTFIX _d)
+    set_target_properties(napalm_simple PROPERTIES RELWITHDEBINFO_POSTFIX _rd)
     set_target_properties(napalm_simple PROPERTIES FOLDER examples)
     #target_include_directories(napalm_sim PRIVATE ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(napalm_simple PRIVATE ::napalm)#${OpenCV_LIBRARIES}
