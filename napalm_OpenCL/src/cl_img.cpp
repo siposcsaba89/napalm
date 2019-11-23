@@ -6,7 +6,7 @@
 #if HAVE_GLEW
 #include <GL/glew.h>
 #else
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #endif
 #include <CL/cl_gl.h>
 #endif
@@ -49,17 +49,25 @@ void getInternalFormat(const napalm::ImgFormat & cl_format,
         else if (type == GL_UNSIGNED_BYTE)
             internal_format = GL_R8;
         else if (type == GL_UNSIGNED_SHORT)
-            internal_format = GL_R16;
+            internal_format = GL_R16UI;
         format = GL_RED;
         break;
     case napalm::IMG_CHANNEL_FORMAT_RGBA:
         if (type == GL_FLOAT)
+        {
             internal_format = GL_RGBA32F;
+            format = GL_RGBA;
+        }
         else if (type == GL_UNSIGNED_BYTE)
+        {
             internal_format = GL_RGBA;
+            format = GL_RGBA;
+        }
         else if (type == GL_UNSIGNED_SHORT)
-            internal_format = GL_RGBA16;
-        format = GL_RGBA;
+        {
+            internal_format = GL_RGBA16UI;
+            format = GL_RGBA_INTEGER;
+        }
         break;
     default:
         assert(false && "cannot create gl shared image format");
@@ -97,12 +105,13 @@ namespace napalm
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 //specify texture dimensions, format etc
-                GLint gl_internal_format = GL_RGBA;
+                GLint gl_internal_format = GL_RGBA32F;
                 GLenum gl_format = GL_RGBA;
                 GLenum type = GL_FLOAT;
                 getInternalFormat(format, gl_internal_format, gl_format, type);
 
                 glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, img_size.x, img_size.y, 0, gl_format, type, 0);
+                
                 m_buffer = clCreateFromGLTexture(ctx->getCLContext(), getCLMemFlag(mem_flag), GL_TEXTURE_2D, 0, texture, &err);
                 handleError(err, "OpenCL Create gl image!");
                 glBindTexture(GL_TEXTURE_2D, 0);

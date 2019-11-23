@@ -56,7 +56,7 @@ if (BUILD_WITH_GL_SHARING_ENABLED)
 	if (NOT glew_FOUND)
 	    # hope gles2 is available
 	    find_library(GLESV2_LIBRARY NAMES GLESv2 PATHS /usr/lib/)
-	    find_path(GL2_INCLUDE NAMES GLES2/gl2.h PATHS /usr/include)
+	    find_path(GL2_INCLUDE NAMES GLES3/gl3.h PATHS /usr/include)
 	 
 	    if (GLESV2_LIBRARY AND GL2_INCLUDE)
 	        add_library(::gles2 SHARED IMPORTED)

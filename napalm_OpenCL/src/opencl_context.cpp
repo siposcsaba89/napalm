@@ -58,7 +58,7 @@ namespace cl
 #else
                 cl_context_properties prop[] = {
                     CL_GL_CONTEXT_KHR, (cl_context_properties)window_data->gl_context,
-                    CL_EGL_DISPLAY_KHR, (cl_context_properties)window_data->native_window,
+                    CL_GLX_DISPLAY_KHR, (cl_context_properties)window_data->native_window,
                     CL_CONTEXT_PLATFORM, (cl_context_properties)platform_ids[pid],
                     0
                 };
@@ -69,13 +69,12 @@ namespace cl
                 // initialized with clGetExtensionFunctionAddressForPlatform.
                 //clGetExtensionFunctionAddressForPlatform
                 // queuring how much bytes we need to read
-                err = (*clGetGLContextInfoKHRF)(prop, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, 0, NULL, &bytes);
+                err = (*clGetGLContextInfoKHRF)(prop, CL_DEVICES_FOR_GL_CONTEXT_KHR, 0, NULL, &bytes);
                 if (err == CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR)
                     continue;
                 handleError(err, "Context creating");
                 // allocating the mem
                 size_t devNum = bytes / sizeof(cl_device_id);
-
                 if (devNum > 0)
                 {
 
@@ -120,7 +119,7 @@ namespace cl
 #else
                 cl_context_properties prop[] = {
                     CL_GL_CONTEXT_KHR, (cl_context_properties)window_data->gl_context,
-                    CL_EGL_DISPLAY_KHR, (cl_context_properties)window_data->native_window,
+                    CL_GLX_DISPLAY_KHR, (cl_context_properties)window_data->native_window,
                     CL_CONTEXT_PLATFORM, (cl_context_properties)cl_platform,
                     0
                 };
