@@ -33,10 +33,10 @@ if (@BUILD_WITH_GL_SHARING_ENABLED@ AND @gles2_FOUND@)
             message(FATAL_ERROR "Could not find gles2")
         endif()
         
-elseif (@BUILD_WITH_GL_SHARING_ENABLED@ AND @glew_FOUND@)
+elseif (@BUILD_WITH_GL_SHARING_ENABLED@ AND @GLEW_FOUND@)
 
-    find_dependency(glew CONFIG)
-	if (NOT glew_FOUND)
+    find_dependency(GLEW CONFIG)
+	if (NOT GLEW_FOUND)
 	    message(FATAL_ERROR "Could not find glew")
 	endif()
 else()
